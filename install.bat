@@ -17,7 +17,7 @@ IF %errorLevel% == 0 (
 
 CLS
 ECHO Downloading PHP...
-powershell -Command "Invoke-WebRequest https://cone.hell.sh/php-7.3.5-nts-Win32-VC15-x86.zip -UseBasicParsing -OutFile php.zip"
+powershell -Command "Invoke-WebRequest https://windows.php.net/downloads/releases/php-7.3.5-nts-Win32-VC15-x86.zip -UseBasicParsing -OutFile php.zip"
 
 ECHO Unpacking PHP...
 powershell -Command "Expand-Archive php.zip -DestinationPath 'PHP 7.3.5'"
@@ -46,7 +46,7 @@ MOVE tmp\Cone-master\src src
 RMDIR /S /Q tmp
 
 ECHO Downloading icon...
-powershell -Command "Invoke-WebRequest https://cone.hell.sh/icon.ico -UseBasicParsing -OutFile icon.ico"
+powershell -Command "Invoke-WebRequest https://cone.hell.sh/favicon.ico -UseBasicParsing -OutFile icon.ico"
 
 ECHO Registering command...
 MKDIR path
