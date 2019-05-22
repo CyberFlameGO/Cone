@@ -1,17 +1,17 @@
 #!/bin/bash
 
-if [ $(whoami) != "root" ]; then
+if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."
 	exit 1
 fi
 
-if [ $(which php) = "" ]; then
+if [ "$(which php)" = "" ]; then
 	echo "Installing PHP..."
-	if [ $(which aptitude) != "" ]; then
+	if [ "$(which aptitude)" != "" ]; then
 		aptitude -y install php-cli
-	elif [ $(which apt-get) != "" ]; then
+	elif [ "$(which apt-get)" != "" ]; then
 		apt-get -y install php-cli
-	elif [ $(which pacman) != "" ]; then
+	elif [ "$(which pacman)" != "" ]; then
 		pacman --noconfirm -S php-cli
 	else
 		echo "Unable to determine your package manager."
@@ -24,7 +24,7 @@ if [ -d /usr/share/cone ]; then
 	rm -rf /usr/share/cone
 fi
 mkdir /usr/share/cone
-cd /usr/share/cone
+cd /usr/share/cone || exit 1
 
 echo "Downloading Cone..."
 wget https://github.com/hell-sh/Cone/archive/master.tar.gz
@@ -36,7 +36,7 @@ mv Cone-master/src/ src
 rm -rf Cone-master
 
 echo "Registering command..."
-cd /usr/bin
+cd /usr/bin || exit 1
 echo "#!/bin/bash" > cone
 echo "" >> cone
 echo "php /usr/share/cone/src/cli.php \"\$@\"" >> cone
