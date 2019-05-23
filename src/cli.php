@@ -90,7 +90,8 @@ switch(@$argv[1])
 	{
 		$package->install($installed_packages);
 	}
-	echo "Installed ".(count($installed_packages) - $before)." packages.\n";
+	$count = (count($installed_packages) - $before);
+	echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
 	Cone::setInstalledPackagesList($installed_packages);
 	break;
 
@@ -194,7 +195,8 @@ switch(@$argv[1])
 			}
 		}
 	}
-	echo "Removed ".($before - count($installed_packages))." packages.\n";
+	$count = ($before - count($installed_packages));
+	echo "Removed ".$count." package".($count == 1 ? "" : "s").".\n";
 	Cone::setInstalledPackagesList($installed_packages);
 	break;
 
