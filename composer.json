@@ -1,0 +1,10 @@
+{
+	"name": "hell-sh/cone",
+	"description": "Cone is an intuitive package manager that works everywhere.",
+	"homepage": "https://github.com/hell-sh/cone",
+	"type": "library",
+	"license": "MIT",
+	"autoload": {
+		"files": ["src/Cone.class.php", "src/ConePackage.class.php"]
+	}
+}

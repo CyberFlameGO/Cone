@@ -1,0 +1,12 @@
+{
+	"major": 0,
+	"revision": 0,
+	"packages": {
+		"composer": {
+			"type": "php_script_downloader",
+			"url": "https://getcomposer.org/installer",
+			"output_file": "composer.phar",
+			"update": "composer self-update"
+		}
+	}
+}
