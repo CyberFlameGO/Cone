@@ -1,4 +1,4 @@
-<center><img alt="Cone" src="logo.png"></center>
+# ![Cone](logo.png)
 
 An intuitive package manager that works everywhere.
 

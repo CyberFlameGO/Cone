@@ -1,6 +1,6 @@
 {
 	"name": "hell-sh/cone",
-	"description": "Cone is an intuitive package manager that works everywhere.",
+	"description": "An intuitive package manager that works everywhere.",
 	"homepage": "https://github.com/hell-sh/cone",
 	"type": "library",
 	"license": "MIT",
