@@ -2,7 +2,7 @@
 namespace hellsh;
 final class Cone
 {
-	const VERSION = "0.2.0";
+	const VERSION = "0.2.1";
 	const PACKAGES_MAJOR = 1;
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
