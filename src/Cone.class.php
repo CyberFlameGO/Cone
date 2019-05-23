@@ -26,7 +26,7 @@ final class Cone
 		{
 			return;
 		}
-		shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude -y install $name\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get -y install $name\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -S $name\nfi");
+		echo shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude -y install $name\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get -y install $name\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -S $name\nfi");
 	}
 
 	static function updateUnixPackages()
@@ -35,7 +35,7 @@ final class Cone
 		{
 			return;
 		}
-		shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude update\naptitude -y upgrade\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get update\napt-get -y upgrade\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -Syu\nfi");
+		echo shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude update\naptitude -y upgrade\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get update\napt-get -y upgrade\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -Syu\nfi");
 	}
 
 	static function getPathFolder()
