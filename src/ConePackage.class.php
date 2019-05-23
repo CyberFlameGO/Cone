@@ -59,7 +59,7 @@ class ConePackage
 					break;
 
 				case "download":
-					shell_exec("php -r \"file_put_contents('".$step["name"]."', file_get_contents('".$step["url"]."'));\"");
+					file_put_contents($step["name"], file_get_contents($step["url"]));
 					break;
 
 				case "delete":
