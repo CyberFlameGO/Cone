@@ -6,5 +6,8 @@
 	"license": "MIT",
 	"autoload": {
 		"files": ["src/Cone.class.php", "src/ConePackage.class.php"]
+	},
+	"require": {
+		"ext-json": "*"
 	}
 }

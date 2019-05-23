@@ -16,15 +16,35 @@ switch(@$argv[1])
 	$installed_packages = Cone::getInstalledPackagesList();
 	if(empty($installed_packages))
 	{
-		echo "0 packages installed.\n";
+		die("0 packages installed.\n");
 	}
-	else
+	echo count($installed_packages)." package".(count($installed_packages) == 1 ? "" : "s")." installed; ";
+	$packages = [];
+	$dependencies = [];
+	foreach($installed_packages as $name => $data)
 	{
-		echo count($installed_packages)." packages installed:\n";
-		foreach($installed_packages as $name => $data)
+		if($data["manual"])
 		{
-			echo "- ".$name."\n";
+			array_push($packages, $name);
 		}
+		else
+		{
+			array_push($dependencies, $name);
+		}
+	}
+	echo count($packages)." manually-installed:\n";
+	foreach($packages as $name)
+	{
+		echo $name."\n";
+	}
+	if(empty($dependencies))
+	{
+		die("and 0 dependencies.\n");
+	}
+	echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
+	foreach($dependencies as $name)
+	{
+		echo $name."\n";
 	}
 	break;
 
@@ -107,10 +127,7 @@ switch(@$argv[1])
 	{
 		Cone::getPackage($package)->update();
 	}
-	if(!Cone::isWindows())
-	{
-		shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude update\naptitude -y upgrade\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get update\napt-get -y upgrade\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -Syu\nfi");
-	}
+	Cone::updateUnixPackages();
 	break;
 
 	case "delete":

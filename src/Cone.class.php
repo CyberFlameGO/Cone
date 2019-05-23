@@ -2,8 +2,8 @@
 namespace hellsh;
 final class Cone
 {
-	const VERSION = "0.1.0";
-	const PACKAGES_MAJOR = 0;
+	const VERSION = "0.2.0";
+	const PACKAGES_MAJOR = 1;
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -27,6 +27,15 @@ final class Cone
 			return;
 		}
 		shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude -y install $name\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get -y install $name\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -S $name\nfi");
+	}
+
+	static function updateUnixPackages()
+	{
+		if(self::isWindows())
+		{
+			return;
+		}
+		shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude update\naptitude -y upgrade\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get update\napt-get -y upgrade\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -Syu\nfi");
 	}
 
 	static function getPathFolder()
@@ -73,6 +82,33 @@ final class Cone
 		{
 			file_put_contents($path, "#!/bin/bash\ncd $working_directory\n$target $target_arguments \"\$@\"");
 			shell_exec("chmod +x ".$path);
+		}
+	}
+
+	static function reallyDelete($path)
+	{
+		if(substr($path, -1) == "/")
+		{
+			$path = substr($path, 0, -1);
+		}
+		if(!file_exists($path))
+		{
+			return;
+		}
+		if(is_dir($path))
+		{
+			foreach(scandir($path) as $file)
+			{
+				if(!in_array($file, [".", ".."]))
+				{
+					self::reallyDelete($path."/".$file);
+				}
+			}
+			rmdir($path);
+		}
+		else
+		{
+			unlink($path);
 		}
 	}
 

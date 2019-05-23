@@ -36,6 +36,63 @@ class ConePackage
 		return $dependencies;
 	}
 
+	function performSteps($steps)
+	{
+		foreach($steps as $step)
+		{
+			switch($step["type"])
+			{
+				case "shell_exec":
+					shell_exec($step["value"]);
+					break;
+
+				case "enable_php_extension":
+					file_put_contents(php_ini_loaded_file(), str_replace("\n;extension=".$step["name"], "\nextension=".$step["name"], file_get_contents(php_ini_loaded_file())));
+					break;
+
+				case "disable_php_extension":
+					file_put_contents(php_ini_loaded_file(), str_replace("\nextension=".$step["name"], "\n;extension=".$step["name"], file_get_contents(php_ini_loaded_file())));
+					break;
+
+				case "install_unix_package":
+					Cone::installUnixPackage($step["name"]);
+					break;
+
+				case "download":
+					shell_exec("php -r \"file_put_contents('".$step["name"]."', file_get_contents('".$step["url"]."'));\"");
+					break;
+
+				case "delete":
+					if(!file_exists($step["value"]))
+					{
+						echo "Warning: ".$step["value"]." can't be deleted as it doesn't exist.\n";
+						break;
+					}
+					Cone::reallyDelete($step["value"]);
+					break;
+
+				case "keep":
+					if(!file_exists($step["value"]))
+					{
+						echo "Warning: ".$step["value"]." can't be kept as it doesn't exist.\n";
+						break;
+					}
+					$dir = __DIR__."/../packages/";
+					if(!is_dir($dir))
+					{
+						mkdir($dir);
+					}
+					$dir = $dir.$this->name."/";
+					if(!is_dir($dir))
+					{
+						mkdir($dir);
+					}
+					rename($step["value"], $dir.$step["value"]);
+					break;
+			}
+		}
+	}
+
 	function install(&$installed_packages, $indents = 0)
 	{
 		if($this->isInstalled())
@@ -54,53 +111,50 @@ class ConePackage
 		{
 			$dependency->install($installed_packages, $indents + 1);
 		}
-		switch($this->data["type"])
+		if(array_key_exists("install", $this->data))
 		{
-			case "php_extension":
-			if(!Cone::isWindows() && !Cone::which($this->data["unix"]))
+			$this->performSteps($this->data["install"]);
+		}
+		if(array_key_exists("shortcuts", $this->data))
+		{
+			$working_directory = realpath(__DIR__."/../packages/".$this->name);
+			if($working_directory === false)
 			{
-				Cone::installUnixPackage($this->data["unix"]);
+				echo "Warning: Can't create any shortcuts as no file was kept.\n";
 			}
-			file_put_contents(php_ini_loaded_file(), str_replace("\n;extension=".$this->data["name"], "\nextension=".$this->data["name"], file_get_contents(php_ini_loaded_file())));
-			break;
-
-			case "php_script_downloader":
-			shell_exec("php -r \"file_put_contents('downloader', file_get_contents('".$this->data["url"]."'));\"");
-			echo shell_exec("php downloader");
-			unlink("downloader");
-			if(!is_dir(__DIR__."/../packages"))
+			else
 			{
-				mkdir(__DIR__."/../packages");
+				foreach($this->data["shortcuts"] as $shortcut)
+				{
+					Cone::createPathShortcut($shortcut["name"], Cone::which($shortcut["target_which"]), $shortcut["target_arguments"], realpath(__DIR__."/../packages/".$this->name));
+				}
 			}
-			rename($this->data["output_file"], __DIR__."/../packages/".$this->name.".php");
-			Cone::createPathShortcut($this->name, Cone::which("php"), $this->name.".php", realpath(__DIR__."/../packages"));
-			break;
 		}
 		$installed_packages[$this->name] = ["manual" => $indents == 0];
 	}
 
 	function update()
 	{
-		switch($this->data["type"])
+		if(array_key_exists("update", $this->data))
 		{
-			case "php_script_downloader":
-			shell_exec($this->data["update"]);
-			break;
+			$this->performSteps($this->data);
 		}
 	}
 
 	function uninstall()
 	{
-		switch($this->data["type"])
+		$dir = __DIR__."/../packages/".$this->name;
+		if(is_dir($dir))
 		{
-			case "php_extension":
-			file_put_contents(php_ini_loaded_file(), str_replace("\nextension=".$this->data["name"], "\n;extension=".$this->data["name"], file_get_contents(php_ini_loaded_file())));
-			break;
-
-			case "php_script_downloader":
-			unlink(__DIR__."/../packages/".$this->name.".php");
-			unlink(Cone::getPathFolder().$this->name.(Cone::isWindows() ? ".lnk" : ""));
-			break;
+			Cone::reallyDelete($dir);
+		}
+		foreach($this->data["shortcuts"] as $shortcut)
+		{
+			unlink(Cone::getPathFolder().$shortcut["name"].(Cone::isWindows() ? ".lnk" : ""));
+		}
+		if(array_key_exists("uninstall", $this->data))
+		{
+			$this->performSteps($this->data["uninstall"]);
 		}
 	}
 }

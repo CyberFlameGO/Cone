@@ -1,12 +1,40 @@
 {
-	"major": 0,
+	"major": 1,
 	"revision": 0,
 	"packages": {
 		"composer": {
-			"type": "php_script_downloader",
-			"url": "https://getcomposer.org/installer",
-			"output_file": "composer.phar",
-			"update": "composer self-update"
+			"install": [
+				{
+					"type": "download",
+					"url": "https://getcomposer.org/installer",
+					"name": "installer"
+				},
+				{
+					"type": "shell_exec",
+					"value": "php installer --quiet"
+				},
+				{
+					"type": "delete",
+					"value": "installer"
+				},
+				{
+					"type": "keep",
+					"value": "composer.phar"
+				}
+			],
+			"update": [
+				{
+					"type": "shell_exec",
+					"value": "composer self-update"
+				}
+			],
+			"shortcuts": [
+				{
+					"name": "composer",
+					"target_which": "php",
+					"target_arguments": "composer.phar"
+				}
+			]
 		}
 	}
 }
