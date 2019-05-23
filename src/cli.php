@@ -52,7 +52,15 @@ switch(@$argv[1])
 		}
 		if(array_key_exists($name, $installed_packages))
 		{
-			echo $name." is already installed.\n";
+			if(!$installed_packages[$name]["manual"])
+			{
+				echo $name." is already installed; now set to manually installed.\n";
+				$installed_packages[$name]["manual"] = true;
+			}
+			else
+			{
+				echo $name." is already installed.\n";
+			}
 			continue;
 		}
 		array_push($packages, $package);
