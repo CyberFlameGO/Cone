@@ -1,4 +1,4 @@
-# ![Cone](logo.png)
+# ![Cone](https://storage.hell.sh/assets/cone/logo.png)
 
 An intuitive package manager that works everywhere.
 
