@@ -1,5 +1,7 @@
 @ECHO OFF
 TITLE Cone Installer
+SET CONE_VERSION=0.2.0
+
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
 	ECHO You need to run this script as administrator.
@@ -32,24 +34,24 @@ DEL php.txt
 "%php%" -r "if(php_ini_loaded_file() === false) { $dir = dirname(shell_exec('where php')); file_put_contents($dir.'/php.ini', file_get_contents($dir.'/php.ini-development').\"\nextension_dir=\\\"$dir\\ext\\\"\"); }"
 "%php%" -r "file_put_contents(php_ini_loaded_file(), str_replace(';extension=openssl', 'extension=openssl', file_get_contents(php_ini_loaded_file())));"
 
-ECHO Downloading Cone...
+ECHO Downloading Cone v%CONE_VERSION%...
 CD %ProgramFiles%
 IF NOT EXIST Hell.sh\ MKDIR Hell.sh
 CD Hell.sh
 IF NOT EXIST Cone\ MKDIR Cone
 CD Cone
-IF EXIST master.zip DEL master.zip
-powershell -Command "Invoke-WebRequest https://github.com/hell-sh/Cone/archive/master.zip -UseBasicParsing -OutFile master.zip"
+IF EXIST Cone.zip DEL Cone.zip
+powershell -Command "Invoke-WebRequest https://github.com/hell-sh/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile Cone.zip"
 
 ECHO Unpacking Cone...
-powershell -Command "Expand-Archive master.zip -DestinationPath tmp"
-ERASE master.zip
+powershell -Command "Expand-Archive Cone.zip -DestinationPath tmp"
+ERASE Cone.zip
 IF EXIST src\ RMDIR /S /Q src
-MOVE tmp\Cone-master\src src
+MOVE tmp\Cone-%CONE_VERSION%\src src
 IF EXIST packages.json DEL packages.json
-MOVE tmp\Cone-master\packages.json packages.json
+MOVE tmp\Cone-%CONE_VERSION%\packages.json packages.json
 IF EXIST icon.ico DEL icon.ico
-MOVE tmp\Cone-master\favicon.ico icon.ico
+MOVE tmp\Cone-%CONE_VERSION%\favicon.ico icon.ico
 RMDIR /S /Q tmp
 
 ECHO Registering command...
