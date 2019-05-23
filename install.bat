@@ -1,8 +1,7 @@
 @ECHO OFF
 TITLE Cone Installer
-NET SESSION > NUL
+NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
-	CLS
 	ECHO You need to run this script as administrator.
 	PAUSE > NUL
 	EXIT
@@ -30,25 +29,31 @@ SET PATH=%cd%\PHP 7.3.5\;%PATH%
 :phpinstalled
 DEL php.txt
 
+"%php%" -r "if(php_ini_loaded_file() === false) { $dir = dirname(shell_exec('where php')); file_put_contents($dir.'/php.ini', file_get_contents($dir.'/php.ini-development').\"\nextension_dir=\\\"$dir\\ext\\\"\"); }"
+"%php%" -r "file_put_contents(php_ini_loaded_file(), str_replace(';extension=openssl', 'extension=openssl', file_get_contents(php_ini_loaded_file())));"
+
 ECHO Downloading Cone...
 CD %ProgramFiles%
 IF NOT EXIST Hell.sh\ MKDIR Hell.sh
 CD Hell.sh
-IF EXIST Cone\ RMDIR /S /Q Cone
-MKDIR Cone
+IF NOT EXIST Cone\ MKDIR Cone
 CD Cone
+IF EXIST master.zip DEL master.zip
 powershell -Command "Invoke-WebRequest https://github.com/hell-sh/Cone/archive/master.zip -UseBasicParsing -OutFile master.zip"
 
 ECHO Unpacking Cone...
 powershell -Command "Expand-Archive master.zip -DestinationPath tmp"
 ERASE master.zip
+IF EXIST src\ RMDIR /S /Q src
 MOVE tmp\Cone-master\src src
+IF EXIST packages.json DEL packages.json
+MOVE tmp\Cone-master\packages.json packages.json
+IF EXIST icon.ico DEL icon.ico
+MOVE tmp\Cone-master\favicon.ico icon.ico
 RMDIR /S /Q tmp
 
-ECHO Downloading icon...
-powershell -Command "Invoke-WebRequest https://cone.hell.sh/favicon.ico -UseBasicParsing -OutFile icon.ico"
-
 ECHO Registering command...
+IF EXIST path\ RMDIR /S /Q path
 MKDIR path
 ECHO Set oWS = WScript.CreateObject("WScript.Shell") > tmp.vbs
 ECHO Set oLink = oWS.CreateShortcut("%cd%\path\cone.lnk") >> tmp.vbs
