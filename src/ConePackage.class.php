@@ -99,6 +99,22 @@ class ConePackage
 		{
 			return;
 		}
+		if(array_key_exists("prerequisites", $this->data))
+		{
+			foreach($this->data["prerequisites"] as $prerequisite)
+			{
+				switch($prerequisite["type"])
+				{
+					case "command_not_found":
+						if(Cone::which($prerequisite["value"]) != "")
+						{
+							echo "Not installing ".$this->name." as ".$prerequisite["value"]." is a registered command.\n";
+							return;
+						}
+						break;
+				}
+			}
+		}
 		if($indents > 0)
 		{
 			echo str_repeat("\t", $indents)."- Installing dependency ".$this->name."...\n";

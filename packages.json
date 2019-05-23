@@ -3,6 +3,12 @@
 	"revision": 0,
 	"packages": {
 		"composer": {
+			"prerequisites": [
+				{
+					"type": "command_not_found",
+					"value": "composer"
+				}
+			],
 			"install": [
 				{
 					"type": "download",

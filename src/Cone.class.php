@@ -45,7 +45,7 @@ final class Cone
 
 	static function which($name)
 	{
-		return trim(shell_exec((self::isWindows() ? "where" : "which")." ".$name));
+		return trim(shell_exec(self::isWindows() ? "WHERE ".$name." 2>NUL" : "which ".$name));
 	}
 
 	static function getPhpDir()
