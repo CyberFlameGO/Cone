@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONE_VERSION=0.3.0
+CONE_VERSION=0.4.0
 
 if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."
@@ -32,7 +32,11 @@ if [ -f Cone.tar.gz ]; then
 fi
 wget https://github.com/hell-sh/Cone/archive/v$CONE_VERSION.tar.gz -O Cone.tar.gz
 
-echo "Unpacking Cone..."
+if [ -f _update_ ]; then
+	echo "Updating Cone..."
+else
+	echo "Installing Cone..."
+fi
 tar -xf Cone.tar.gz
 rm -f Cone.tar.gz
 if [ -d src ]; then
@@ -43,12 +47,16 @@ if [ -f packages.json ]; then
 	rm -f packages.json
 fi
 mv Cone-$CONE_VERSION/packages.json packages.json
+if [ -f /usr/bin/cone ]; then
+	rm /usr/bin/cone
+fi
+mv Cone-$CONE_VERSION/start.sh /usr/bin/cone
+chmod +x /usr/bin/cone
 rm -rf Cone-$CONE_VERSION
 
-echo "Registering command..."
-cd /usr/bin || exit 1
-echo "#!/bin/bash" > cone
-echo "php /usr/share/cone/src/cli.php \"\$@\"" >> cone
-chmod +x cone
-
-echo "Cone is now installed. Use 'cone help' to get started!"
+if [ -f _update_ ]; then
+	rm _update_
+	cone update
+else
+	echo "Cone is now installed. Use 'cone help' to get started!"
+fi

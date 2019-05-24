@@ -4,8 +4,6 @@ An intuitive package manager that works everywhere.
 
 ## Installation
 
-Follow the steps for your operating system to install or update Cone.
-
 - **Windows**: Download and execute [install.bat](https://getcone.org/install.bat)
 - **Not Windows**: Open up a terminal and enter `wget -qO- https://getcone.org/install.sh | sudo bash`
 

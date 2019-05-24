@@ -1,6 +1,6 @@
 @ECHO OFF
 TITLE Cone Installer
-SET CONE_VERSION=0.3.0
+SET CONE_VERSION=0.4.0
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
@@ -43,36 +43,31 @@ CD Cone
 IF EXIST Cone.zip DEL Cone.zip
 powershell -Command "Invoke-WebRequest https://github.com/hell-sh/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile Cone.zip"
 
-ECHO Unpacking Cone...
+IF EXIST _update_ (
+	ECHO Updating Cone...
+) ELSE (
+	ECHO Installing Cone...
+)
 powershell -Command "Expand-Archive Cone.zip -DestinationPath tmp"
 ERASE Cone.zip
 IF EXIST src\ RMDIR /S /Q src
 MOVE tmp\Cone-%CONE_VERSION%\src src
 IF EXIST packages.json DEL packages.json
 MOVE tmp\Cone-%CONE_VERSION%\packages.json packages.json
-IF EXIST icon.ico DEL icon.ico
-MOVE tmp\Cone-%CONE_VERSION%\favicon.ico icon.ico
-RMDIR /S /Q tmp
-
-ECHO Registering command...
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.lnk DEL path\cone.lnk
-ECHO Set oWS = WScript.CreateObject("WScript.Shell") > tmp.vbs
-ECHO Set oLink = oWS.CreateShortcut("%cd%\path\cone.lnk") >> tmp.vbs
-ECHO oLink.IconLocation = "%cd%\icon.ico" >> tmp.vbs
-ECHO oLink.TargetPath = "%php%" >> tmp.vbs
-ECHO oLink.Arguments = "src\cli.php" >> tmp.vbs
-ECHO oLink.WorkingDirectory = "%cd%" >> tmp.vbs
-ECHO oLink.Save >> tmp.vbs
-CSCRIPT /nologo tmp.vbs
-DEL tmp.vbs
+IF EXIST path\cone.bat DEL path\cone.bat
+MOVE tmp\Cone-%CONE_VERSION%\start.bat path\cone.bat
+IF EXIST icon.ico DEL icon.ico
+RMDIR /S /Q tmp
+IF EXIST _update_ (
+	DEL _update_
+	START cmd /k "cone update"
+	EXIT
+)
 "%php%" -r "exit(strpos(getenv('PATH'), '%cd%\path\;') !== false ? 1 : 0);"
 IF %errorLevel% == 0 (
 	REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "%cd%\path\;%PATH%"
-)
-"%php%" -r "exit(strpos(getenv('PATHEXT'), ';.LNK') !== false ? 1 : 0);"
-IF %errorLevel% == 0 (
-	REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATHEXT /T REG_SZ /D "%PATHEXT%;.LNK"
 )
 :: Setting a temporary dummy variable so setx will broadcast WM_SETTINGCHANGE so the PATH & PATHEXT changes are reflected without needing a restart.
 SETX /m DUMMY ""

@@ -2,8 +2,7 @@
 namespace hellsh;
 final class Cone
 {
-	const VERSION = "0.3.0";
-	const PACKAGES_MAJOR = 2;
+	const VERSION = "0.4.0";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -183,10 +182,7 @@ final class Cone
 
 	static function getPackagesVersion()
 	{
-		return [
-			"major" => self::getPackagesJson()["major"],
-			"revision" => self::getPackagesJson()["revision"]
-		];
+		return self::getPackagesJson()["revision"];
 	}
 
 	static function getPackages()

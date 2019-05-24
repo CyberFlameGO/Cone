@@ -7,7 +7,7 @@ switch(@$argv[1])
 	case "info":
 	case "about":
 	case "version":
-	echo "Cone v".Cone::VERSION."\nPackage list v".Cone::getPackagesVersion()["major"].".".Cone::getPackagesVersion()["revision"]."\nUse 'cone update' to check for updates.\n";
+	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackagesVersion()."\nUse 'cone update' to check for updates.\n";
 	break;
 
 	case "list":
@@ -114,19 +114,14 @@ switch(@$argv[1])
 	$remote_versions = json_decode(file_get_contents("https://getcone.org/versions.json"), true);
 	if($remote_versions["cone"] != Cone::VERSION)
 	{
-		echo "Cone v".$remote_versions["cone"]." is available.\nFollow the instructions at https://getcone.org/#installation to update.\n";
+		echo "Cone v".$remote_versions["cone"]." is available.\n";
+		file_put_contents("_update_", "");
+		exit;
 	}
-	else
+	echo "Cone is up-to-date.\n";
+	if($remote_versions["packages"] > Cone::getPackagesVersion())
 	{
-		echo "Cone is up-to-date.\n";
-	}
-	if($remote_versions["packages"]["major"] > Cone::PACKAGES_MAJOR)
-	{
-		echo "A Cone update is required to update package list.\n";
-	}
-	else if($remote_versions["packages"]["revision"] > Cone::getPackagesVersion()["revision"] || $remote_versions["packages"]["major"] > Cone::getPackagesVersion()["major"])
-	{
-		echo "Updating package list v".Cone::getPackagesVersion()["major"].".".Cone::getPackagesVersion()["revision"]." to v".$remote_versions["packages"]["major"].$remote_versions["packages"]["revision"]."...";
+		echo "Updating package list rev. ".Cone::getPackagesVersion()["revision"]." to rev. ".$remote_versions["packages"]."...";
 		file_put_contents(Cone::PACKAGES_FILE, file_get_contents("https://getcone.org/packages.json"));
 		echo " Done.\n";
 	}
@@ -139,6 +134,14 @@ switch(@$argv[1])
 		Cone::getPackage($name)->update();
 	}
 	Cone::updateUnixPackages();
+	break;
+
+	case "force-self-update":
+	if(!Cone::isAdmin())
+	{
+		die("Cone needs to run as administrator/root to update.\n");
+	}
+	file_put_contents("_update_", "");
 	break;
 
 	case "delete":
