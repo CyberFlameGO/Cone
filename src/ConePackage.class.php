@@ -36,6 +36,11 @@ class ConePackage
 		return $dependencies;
 	}
 
+	function getAliases()
+	{
+		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
+	}
+
 	function performSteps($steps)
 	{
 		foreach($steps as $step)

@@ -142,9 +142,20 @@ final class Cone
 		return self::$packages_cache;
 	}
 
-	static function getPackage($name)
+	static function getPackage($name, $try_aliases = false)
 	{
-		return @self::getPackages()[$name];
+		$package = @self::getPackages()[$name];
+		if($try_aliases && $package === null)
+		{
+			foreach(self::$packages_cache as $p)
+			{
+				if(in_array($name, $p->getAliases()))
+				{
+					return $p;
+				}
+			}
+		}
+		return $package;
 	}
 
 	static function getInstalledPackagesList()

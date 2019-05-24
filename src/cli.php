@@ -65,7 +65,7 @@ switch(@$argv[1])
 	for($i = 2; $i < count($argv); $i++)
 	{
 		$name = strtolower($argv[$i]);
-		$package = Cone::getPackage($name);
+		$package = Cone::getPackage($name, true);
 		if($package === NULL)
 		{
 			die("Unknown package: ".$name."\n");
@@ -144,7 +144,7 @@ switch(@$argv[1])
 	for($i = 2; $i < count($argv); $i++)
 	{
 		$name = strtolower($argv[$i]);
-		$package = Cone::getPackage($name);
+		$package = Cone::getPackage($name, true);
 		if($package === NULL)
 		{
 			die("Unknown package: ".$name."\n");
