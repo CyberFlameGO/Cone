@@ -228,4 +228,34 @@ final class Cone
 		self::$installed_packages_list_cache = $list;
 		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($list));
 	}
+
+	static function removeUnneededDependencies(&$installed_packages = null)
+	{
+		if($installed_packages === null)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		foreach($installed_packages as $name => $data)
+		{
+			$package = Cone::getPackage($name);
+			if(!$package->isManuallyInstalled())
+			{
+				$needed = false;
+				foreach($installed_packages as $name_ => $data_)
+				{
+					if(in_array($name, Cone::getPackage($name_)->getDependenciesList()))
+					{
+						$needed = true;
+						break;
+					}
+				}
+				if(!$needed)
+				{
+					echo "Removing unneeded dependency ".$name."...\n";
+					$package->uninstall();
+					unset($installed_packages[$name]);
+				}
+			}
+		}
+	}
 }

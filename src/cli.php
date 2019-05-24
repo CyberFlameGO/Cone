@@ -133,6 +133,7 @@ switch(@$argv[1])
 	{
 		Cone::getPackage($name)->update();
 	}
+	Cone::removeUnneededDependencies();
 	Cone::updateUnixPackages();
 	break;
 
@@ -186,28 +187,7 @@ switch(@$argv[1])
 		$package->uninstall();
 		unset($installed_packages[$package->name]);
 	}
-	foreach($installed_packages as $name => $data)
-	{
-		$package = Cone::getPackage($name);
-		if(!$package->isManuallyInstalled())
-		{
-			$needed = false;
-			foreach($installed_packages as $name_ => $data_)
-			{
-				if(in_array($name, Cone::getPackage($name_)->getDependenciesList()))
-				{
-					$needed = true;
-					break;
-				}
-			}
-			if(!$needed)
-			{
-				echo "Removing now-unneeded dependency ".$name."...\n";
-				$package->uninstall();
-				unset($installed_packages[$name]);
-			}
-		}
-	}
+	Cone::removeUnneededDependencies($installed_packages);
 	$count = ($before - count($installed_packages));
 	echo "Removed ".$count." package".($count == 1 ? "" : "s").".\n";
 	Cone::setInstalledPackagesList($installed_packages);
