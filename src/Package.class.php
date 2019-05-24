@@ -1,6 +1,6 @@
 <?php
-namespace hellsh;
-class ConePackage
+namespace hellsh\Cone;
+class Package
 {
 	public $name;
 	private $data;

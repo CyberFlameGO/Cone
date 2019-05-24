@@ -5,7 +5,7 @@
 	"type": "library",
 	"license": "MIT",
 	"autoload": {
-		"files": ["src/Cone.class.php", "src/ConePackage.class.php"]
+		"files": ["src/Cone.class.php", "src/Package.class.php"]
 	},
 	"require": {
 		"ext-json": "*"

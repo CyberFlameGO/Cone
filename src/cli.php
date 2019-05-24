@@ -1,7 +1,7 @@
 <?php
 require __DIR__."/Cone.class.php";
-require __DIR__."/ConePackage.class.php";
-use hellsh\Cone;
+require __DIR__."/Package.class.php";
+use hellsh\Cone\Cone;
 switch(@$argv[1])
 {
 	case "info":

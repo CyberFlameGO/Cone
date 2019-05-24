@@ -1,5 +1,5 @@
 <?php
-namespace hellsh;
+namespace hellsh\Cone;
 final class Cone
 {
 	const VERSION = "0.4.0";
@@ -192,7 +192,7 @@ final class Cone
 			self::$packages_cache = [];
 			foreach(self::getPackagesJson()["packages"] as $name => $data)
 			{
-				self::$packages_cache[$name] = new ConePackage($name, $data);
+				self::$packages_cache[$name] = new Package($name, $data);
 			}
 		}
 		return self::$packages_cache;
