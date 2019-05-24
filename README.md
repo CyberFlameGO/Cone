@@ -11,9 +11,9 @@ An intuitive package manager that works everywhere.
 
 Currently, Cone can install:
 
+- Java (OpenJDK) 12.0.1
+  - Maven 3.6.1
 - Composer
-- Java
-  - Maven
 
 ### Adding a package
 
