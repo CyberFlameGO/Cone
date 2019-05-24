@@ -25,26 +25,36 @@ switch(@$argv[1])
 	{
 		if($data["manual"])
 		{
-			array_push($packages, $name);
+			$packages[$name] = $data;
 		}
 		else
 		{
-			array_push($dependencies, $name);
+			$dependencies[$name] = $data;
 		}
 	}
 	echo count($packages)." manually-installed:\n";
-	foreach($packages as $name)
+	foreach($packages as $name => $data)
 	{
-		echo $name."\n";
+		echo $name;
+		if(array_key_exists("version", $data))
+		{
+			echo " v".$data["version"];
+		}
+		echo "\n";
 	}
 	if(empty($dependencies))
 	{
 		die("and 0 dependencies.\n");
 	}
 	echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
-	foreach($dependencies as $name)
+	foreach($dependencies as $name => $data)
 	{
-		echo $name."\n";
+		echo $name;
+		if(array_key_exists("version", $data))
+		{
+			echo " v".$data["version"];
+		}
+		echo "\n";
 	}
 	break;
 
@@ -124,9 +134,9 @@ switch(@$argv[1])
 	{
 		echo "Package list is up-to-date.\n";
 	}
-	foreach(Cone::getInstalledPackagesList() as $package)
+	foreach(Cone::getInstalledPackagesList() as $name => $data)
 	{
-		Cone::getPackage($package)->update();
+		Cone::getPackage($name)->update();
 	}
 	Cone::updateUnixPackages();
 	break;

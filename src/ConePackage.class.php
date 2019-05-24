@@ -152,6 +152,10 @@ class ConePackage
 			}
 		}
 		$installed_packages[$this->name] = ["manual" => $indents == 0];
+		if(array_key_exists("version", $this->data))
+		{
+			$installed_packages[$this->name]["version"] = $this->data["version"];
+		}
 	}
 
 	function update()
