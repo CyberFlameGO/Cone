@@ -4,6 +4,8 @@ An intuitive package manager that works everywhere.
 
 ## Installation
 
+Follow the steps appropriate to your operating system to install or update Cone.
+
 ### Windows
 
 1. Download [install.bat](https://getcone.org/install.bat)
