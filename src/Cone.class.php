@@ -2,8 +2,8 @@
 namespace hellsh;
 final class Cone
 {
-	const VERSION = "0.2.1";
-	const PACKAGES_MAJOR = 1;
+	const VERSION = "0.3.0";
+	const PACKAGES_MAJOR = 2;
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -13,6 +13,21 @@ final class Cone
 	static function isWindows()
 	{
 		return defined("PHP_WINDOWS_VERSION_MAJOR");
+	}
+
+	static function isUnix()
+	{
+		return !self::isWindows();
+	}
+
+	static function isMacOS()
+	{
+		return stristr(PHP_OS, "DAR");
+	}
+
+	static function isLinux()
+	{
+		return stristr(PHP_OS, "LINUX");
 	}
 
 	static function isAdmin()
@@ -65,7 +80,7 @@ final class Cone
 		return $dir."/php.ini";
 	}
 
-	static function createPathShortcut($name, $target, $target_arguments, $working_directory)
+	static function createPathShortcut($name, $options)
 	{
 		$path = self::getPathFolder().$name;
 		if(self::isWindows())
@@ -74,13 +89,33 @@ final class Cone
 			file_put_contents($path, "");
 			$path = realpath($path);
 			unlink($path);
-			file_put_contents("tmp.vbs", "Set oWS = WScript.CreateObject(\"WScript.Shell\")\nSet oLink = oWS.CreateShortcut(\"$path\")\noLink.TargetPath = \"$target\"\noLink.Arguments = \"$target_arguments\"\noLink.WorkingDirectory = \"$working_directory\"\noLink.Save");
+			$vbs = "Set oWS = WScript.CreateObject(\"WScript.Shell\")\nSet oLink = oWS.CreateShortcut(\"$path\")\noLink.TargetPath = \"".$options["target"]."\"\n";
+			if(array_key_exists("target_arguments", $options))
+			{
+				$vbs .= "oLink.Arguments = \"".$options["target_arguments"]."\"\n";
+			}
+			if(array_key_exists("working_directory", $options))
+			{
+				$vbs .= "oLink.WorkingDirectory = \"".$options["working_directory"]."\"\n";
+			}
+			$vbs .= "oLink.Save";
+			file_put_contents("tmp.vbs", $vbs);
 			shell_exec("cscript /nologo tmp.vbs");
 			unlink("tmp.vbs");
 		}
 		else
 		{
-			file_put_contents($path, "#!/bin/bash\ncd $working_directory\n$target $target_arguments \"\$@\"");
+			$bash = "#!/bin/bash\n";
+			if(array_key_exists("working_directory", $options))
+			{
+				$bash .= "cd ".$options["working_directory"]."\n";
+			}
+			$bash .= $options["target"];
+			if(array_key_exists("target_arguments", $options))
+			{
+				$bash .= " ".$options["target_arguments"];
+			}
+			file_put_contents($path, $bash." \"\$@\"");
 			shell_exec("chmod +x ".$path);
 		}
 	}
@@ -109,6 +144,31 @@ final class Cone
 		else
 		{
 			unlink($path);
+		}
+	}
+
+	static function download($url, $output)
+	{
+		if(self::isWindows())
+		{
+			shell_exec('powershell -Command "Invoke-WebRequest \\"'.$url.'\\" -UseBasicParsing -OutFile \\"'.$output.'\\""');
+		}
+		else
+		{
+			shell_exec('wget \\"'.$url.'\\" -O \\"'.$output.'\\"');
+		}
+	}
+
+	static function extract($file, $target_dir)
+	{
+		if(self::isWindows())
+		{
+			shell_exec('powershell -Command "Expand-Archive \"'.$file.'\" -DestinationPath \"'.$target_dir.'\""');
+		}
+		else
+		{
+			mkdir($target_dir);
+			shell_exec("tar -xf \"".$file."\" -C \"".$target_dir."\"");
 		}
 	}
 

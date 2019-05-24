@@ -211,5 +211,5 @@ switch(@$argv[1])
 	break;
 
 	default:
-	echo "Syntax: cone [info|list|get <packages ...>|update|remove <packages ...>]\n";
+	echo "Syntax: cone [info|list|update|get <packages ...>|remove <packages ...>]\n";
 }

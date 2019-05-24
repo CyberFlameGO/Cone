@@ -1,5 +1,5 @@
 {
-	"major": 1,
+	"major": 2,
 	"revision": 0,
 	"packages": {
 		"composer": {
@@ -12,8 +12,8 @@
 			"install": [
 				{
 					"type": "download",
-					"url": "https://getcomposer.org/installer",
-					"name": "installer"
+					"name": "installer",
+					"url": "https://getcomposer.org/installer"
 				},
 				{
 					"type": "shell_exec",
@@ -21,11 +21,12 @@
 				},
 				{
 					"type": "delete",
-					"value": "installer"
+					"file": "installer"
 				},
 				{
 					"type": "keep",
-					"value": "composer.phar"
+					"file": "composer.phar",
+					"as": "composer.phar"
 				}
 			],
 			"update": [
@@ -41,6 +42,105 @@
 					"target_arguments": "composer.phar"
 				}
 			]
+		},
+		"java": {
+			"aliases": ["jdk", "openjdk"],
+			"version": "12.0.1",
+			"prerequisites": [
+				{
+					"type": "command_not_found",
+					"value": "java"
+				}
+			],
+			"install": [
+				{
+					"type": "platform_switch",
+					"windows": [
+						{
+							"type": "download",
+							"name": "tmp.zip",
+							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_windows-x64_bin.zip",
+							"hash": {
+								"sha256": "fc7d9eee3c09ea6548b00ca25dbf34a348b3942c815405a1428e0bfef268d08d"
+							}
+						}
+					],
+					"macos": [
+						{
+							"type": "download",
+							"name": "tmp.tar.gz",
+							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_osx-x64_bin.tar.gz",
+							"hash": {
+								"sha256": "cba6f42f82496f62c51fb544e243d440984d442bdc906550a30428d8be6189e5"
+							}
+						}
+					],
+					"linux": [
+						{
+							"type": "download",
+							"name": "tmp.tar.gt",
+							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz",
+							"hash": {
+								"sha256": "151eb4ec00f82e5e951126f572dc9116104c884d97f91be14ec11e85fc2dd626"
+							}
+						}
+					]
+				},
+				{
+					"type": "platform_switch",
+					"windows": [
+						{
+							"type": "extract",
+							"file": "tmp.zip",
+							"target": "tmp"
+						}
+					],
+					"unix": [
+						{
+							"type": "extract",
+							"file": "tmp.tar.gz",
+							"target": "tmp"
+						}
+					]
+				},
+				{
+					"type": "keep",
+					"file": "tmp/jdk-12.0.1",
+					"as": ""
+				},
+				{
+					"type": "delete",
+					"file": "tmp"
+				},
+				{
+					"type": "platform_switch",
+					"windows": [
+						{
+							"type": "delete",
+							"file": "tmp.zip"
+						}
+					],
+					"unix": [
+						{
+							"type": "delete",
+							"file": "tmp.tar.gz"
+						}
+					]
+				}
+			],
+			"shortcuts": [
+				{
+					"name": "java",
+					"target": "bin/java"
+				},
+				{
+					"name": "keytools",
+					"target": "bin/keytools"
+				}
+			],
+			"file_associations": {
+				"jar": "bin/java.exe -jar %1"
+			}
 		}
 	}
 }

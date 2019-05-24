@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONE_VERSION=0.2.1
+CONE_VERSION=0.3.0
 
 if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."
@@ -33,7 +33,7 @@ fi
 wget https://github.com/hell-sh/Cone/archive/v$CONE_VERSION.tar.gz -O Cone.tar.gz
 
 echo "Unpacking Cone..."
-tar -xzf Cone.tar.gz
+tar -xf Cone.tar.gz
 rm -f Cone.tar.gz
 if [ -d src ]; then
 	rm -rf src
