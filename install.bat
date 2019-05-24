@@ -55,8 +55,8 @@ MOVE tmp\Cone-%CONE_VERSION%\favicon.ico icon.ico
 RMDIR /S /Q tmp
 
 ECHO Registering command...
-IF EXIST path\ RMDIR /S /Q path
-MKDIR path
+IF NOT EXIST path\ MKDIR path
+IF EXIST path\cone.lnk DEL path\cone.lnk
 ECHO Set oWS = WScript.CreateObject("WScript.Shell") > tmp.vbs
 ECHO Set oLink = oWS.CreateShortcut("%cd%\path\cone.lnk") >> tmp.vbs
 ECHO oLink.IconLocation = "%cd%\icon.ico" >> tmp.vbs
