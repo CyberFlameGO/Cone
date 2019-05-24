@@ -4,8 +4,8 @@ SET CONE_VERSION=0.3.0
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
-	ECHO You need to run this script as administrator.
-	PAUSE > NUL
+	ECHO Requesting elevation...
+	powershell "saps -filepath %0 -verb runas"
 	EXIT
 )
 
