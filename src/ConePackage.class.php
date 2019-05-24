@@ -162,7 +162,7 @@ class ConePackage
 	{
 		if(array_key_exists("update", $this->data))
 		{
-			$this->performSteps($this->data);
+			$this->performSteps($this->data["update"]);
 		}
 	}
 
