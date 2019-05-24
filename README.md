@@ -6,7 +6,7 @@ An intuitive package manager that works everywhere.
 
 ### Windows
 
-1. Download [install.bat](https://cone.hell.sh/install.bat)
+1. Download [install.bat](https://getcone.org/install.bat)
 2. Right-click install.bat in the download bar or window
 3. Select "Show in folder" or "Open Containing Folder" or similar
 4. Right-click install.bat
@@ -14,10 +14,10 @@ An intuitive package manager that works everywhere.
 
 ### Not Windows
 
-	wget -qO- https://cone.hell.sh/install.sh | sudo bash
+	wget -qO- https://getcone.org/install.sh | sudo bash
 
 Unless `sudo` is not installed:
 
 	su -
-	wget -qO- https://cone.hell.sh/install.sh | bash
+	wget -qO- https://getcone.org/install.sh | bash
 	exit

@@ -101,10 +101,10 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
-	$remote_versions = json_decode(file_get_contents("https://cone.hell.sh/versions.json"), true);
+	$remote_versions = json_decode(file_get_contents("https://getcone.org/versions.json"), true);
 	if($remote_versions["cone"] != Cone::VERSION)
 	{
-		echo "Cone v".$remote_versions["cone"]." is available.\nFollow the instructions at https://cone.hell.sh/#installation to update.\n";
+		echo "Cone v".$remote_versions["cone"]." is available.\nFollow the instructions at https://getcone.org/#installation to update.\n";
 	}
 	else
 	{
@@ -117,7 +117,7 @@ switch(@$argv[1])
 	else if($remote_versions["packages"]["revision"] > Cone::getPackagesVersion()["revision"] || $remote_versions["packages"]["major"] > Cone::getPackagesVersion()["major"])
 	{
 		echo "Updating package list v".Cone::getPackagesVersion()["major"].".".Cone::getPackagesVersion()["revision"]." to v".$remote_versions["packages"]["major"].$remote_versions["packages"]["revision"]."...";
-		file_put_contents(Cone::PACKAGES_FILE, file_get_contents("https://cone.hell.sh/packages.json"));
+		file_put_contents(Cone::PACKAGES_FILE, file_get_contents("https://getcone.org/packages.json"));
 		echo " Done.\n";
 	}
 	else
