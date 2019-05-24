@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONE_VERSION=0.4.0
+CONE_VERSION=0.5.0
 
 if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."

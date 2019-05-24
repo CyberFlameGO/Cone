@@ -2,12 +2,13 @@
 require __DIR__."/Cone.class.php";
 require __DIR__."/Package.class.php";
 use hellsh\Cone\Cone;
+use hellsh\Cone\Package;
 switch(@$argv[1])
 {
 	case "info":
 	case "about":
 	case "version":
-	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackagesVersion()."\nUse 'cone update' to check for updates.\n";
+	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackagesVersion().".\nUse 'cone update' to check for updates.\n";
 	break;
 
 	case "list":
@@ -80,16 +81,16 @@ switch(@$argv[1])
 		{
 			die("Unknown package: ".$name."\n");
 		}
-		if(array_key_exists($name, $installed_packages))
+		if(array_key_exists($package->name, $installed_packages))
 		{
-			if(!$installed_packages[$name]["manual"])
+			if($installed_packages[$package->name]["manual"])
 			{
-				echo $name." is already installed; now set to manually installed.\n";
-				$installed_packages[$name]["manual"] = true;
+				echo $package->name." is already installed.\n";
 			}
 			else
 			{
-				echo $name." is already installed.\n";
+				echo $package->name." is already installed; now set to manually installed.\n";
+				$installed_packages[$package->name]["manual"] = true;
 			}
 			continue;
 		}
@@ -145,6 +146,7 @@ switch(@$argv[1])
 	file_put_contents("_update_", "");
 	break;
 
+	case "rm":
 	case "delete":
 	case "remove":
 	case "uninstal":
@@ -158,34 +160,42 @@ switch(@$argv[1])
 	for($i = 2; $i < count($argv); $i++)
 	{
 		$name = strtolower($argv[$i]);
-		$package = Cone::getPackage($name, true);
-		if($package === NULL)
+		if(!array_key_exists($name, $installed_packages))
 		{
-			die("Unknown package: ".$name."\n");
+			$p = Cone::getPackage($name, true);
+			if($p != null)
+			{
+				$name = $p->name;
+			}
 		}
 		if(!array_key_exists($name, $installed_packages))
 		{
 			echo $name." is not installed.\n";
 			continue;
 		}
-		array_push($packages, $package);
+		array_push($packages, $name);
 	}
 	foreach($packages as $package)
 	{
 		foreach($installed_packages as $name => $data)
 		{
-			if(!in_array($name, $packages) && in_array($package->name, Cone::getPackage($name)->getDependenciesList()))
+			if(in_array($name, $packages))
 			{
-				die($name." depends on ".$package->name.".\n");
+				continue;
+			}
+			$p = Cone::getPackage($name);
+			if($p != null && in_array($package, $p->getDependenciesList()))
+			{
+				die($name." depends on ".$package.".\n");
 			}
 		}
 	}
 	$before = count($installed_packages);
 	foreach($packages as $package)
 	{
-		echo "Removing ".$package->name."...\n";
-		$package->uninstall();
-		unset($installed_packages[$package->name]);
+		echo "Removing ".$package."...\n";
+		(new Package($package))->uninstall();
+		unset($installed_packages[$package]);
 	}
 	Cone::removeUnneededDependencies($installed_packages);
 	$count = ($before - count($installed_packages));

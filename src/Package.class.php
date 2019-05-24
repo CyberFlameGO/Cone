@@ -5,7 +5,7 @@ class Package
 	public $name;
 	private $data;
 
-	function __construct($name, $data)
+	function __construct($name, $data = [])
 	{
 		$this->name = $name;
 		$this->data = $data;
@@ -16,9 +16,14 @@ class Package
 		return array_key_exists($this->name, Cone::getInstalledPackagesList());
 	}
 
+	function getInstallData()
+	{
+		return @Cone::getInstalledPackagesList()[$this->name];
+	}
+
 	function isManuallyInstalled()
 	{
-		return Cone::getInstalledPackagesList()[$this->name]["manual"];
+		return self::getInstallData()["manual"];
 	}
 
 	function getDependenciesList()
@@ -102,9 +107,8 @@ class Package
 						{
 							if(hash_file($algo, $step["name"]) != $hash)
 							{
-								echo $step["name"]." signature mismatch, aborting install.\n";
+								echo "Warning: ".$step["name"]." signature mismatch.\n";
 								unlink($step["name"]);
-								return;
 							}
 						}
 					}
@@ -198,6 +202,7 @@ class Package
 			$this->performSteps($this->data["install"]);
 		}
 		$working_directory = realpath(__DIR__."/../packages/".$this->name);
+		$installed_packages[$this->name] = ["manual" => ($dependency_of === null)];
 		if(array_key_exists("shortcuts", $this->data))
 		{
 			if($working_directory === false)
@@ -206,30 +211,60 @@ class Package
 			}
 			else
 			{
-				foreach($this->data["shortcuts"] as $shortcut)
+				foreach($this->data["shortcuts"] as $name => $data)
 				{
 					$options = [
 						"working_directory" => $working_directory
 					];
-					if(array_key_exists("target_arguments", $shortcut))
+					if(array_key_exists("target_arguments", $data))
 					{
-						$options["target_arguments"] = $shortcut["target_arguments"];
+						$options["target_arguments"] = $data["target_arguments"];
 					}
-					if(array_key_exists("target", $shortcut))
+					if(array_key_exists("target", $data))
 					{
-						$options["target"] = realpath($working_directory."/".$shortcut["target"].(Cone::isWindows() ? ".exe" : ""));
+						$target = $working_directory."/".$data["target"];
+						if(Cone::isWindows())
+						{
+							$target .= $data["target_winext"];
+						}
+						$options["target"] = realpath($target);
 					}
-					else if(array_key_exists("target_which", $shortcut))
+					else if(array_key_exists("target_which", $data))
 					{
-						$options["target"] = Cone::which($shortcut["target_which"]);
+						$options["target"] = Cone::which($data["target_which"]);
 					}
 					else
 					{
 						echo "Error: Shortcut is missing target or target_which.\n";
 					}
-					Cone::createPathShortcut($shortcut["name"], $options);
+					Cone::createPathShortcut($name, $options);
 				}
+				$installed_packages[$this->name]["shortcuts"] = array_keys($this->data["shortcuts"]);
 			}
+		}
+		if(array_key_exists("variables", $this->data))
+		{
+			foreach($this->data["variables"] as $name => $data)
+			{
+				if(array_key_exists("path", $data))
+				{
+					$value = realpath($working_directory."/".$data["path"]);
+				}
+				else
+				{
+					$value = $data["value"];
+				}
+				if(Cone::isWindows())
+				{
+					shell_exec("SETX /m {$name} \"{$value}\"");
+				}
+				else
+				{
+					file_put_contents("/etc/environment", file_get_contents("/etc/environment")."{$name}={$value}\n");
+				}
+				putenv("{$name}={$value}");
+			}
+			$installed_packages[$this->name]["variables"] = array_keys($this->data["variables"]);
 		}
 		if(Cone::isWindows() && array_key_exists("file_associations", $this->data))
 		{
@@ -243,12 +278,16 @@ class Package
 				{
 					shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$working_directory}\\{$cmd}");
 				}
+				$installed_packages[$this->name]["file_associations"] = array_keys($this->data["file_associations"]);
 			}
 		}
-		$installed_packages[$this->name] = ["manual" => ($dependency_of === null)];
 		if(array_key_exists("version", $this->data))
 		{
 			$installed_packages[$this->name]["version"] = $this->data["version"];
+		}
+		if(array_key_exists("uninstall", $this->data))
+		{
+			$installed_packages[$this->name]["uninstall"] = $this->data["uninstall"];
 		}
 	}
 
@@ -262,28 +301,60 @@ class Package
 
 	function uninstall()
 	{
+		if(!self::isInstalled())
+		{
+			return;
+		}
 		$dir = __DIR__."/../packages/".$this->name;
 		if(is_dir($dir))
 		{
 			Cone::reallyDelete($dir);
 		}
-		if(array_key_exists("shortcuts", $this->data))
+		$data = self::getInstallData();
+		if(array_key_exists("shortcuts", $data))
 		{
-			foreach($this->data["shortcuts"] as $shortcut)
+			foreach($data["shortcuts"] as $name)
 			{
-				unlink(Cone::getPathFolder().$shortcut["name"].(Cone::isWindows() ? ".lnk" : ""));
+				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".lnk" : ""));
 			}
 		}
-		if(Cone::isWindows() && array_key_exists("file_associations", $this->data))
+		if(array_key_exists("variables", $data))
 		{
-			foreach($this->data["file_associations"] as $ext => $cmd)
+			if(Cone::isWindows())
+			{
+				foreach($data["variables"] as $name)
+				{
+					shell_exec('REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V '.$name);
+				}
+			}
+			else
+			{
+				$env = [];
+				foreach(file("/etc/environment") as $line)
+				{
+					if($line = trim($line))
+					{
+						$arr = explode("=", $line, 2);
+						$env[$arr[0]] = $arr[1];
+					}
+				}
+				foreach($data["variables"] as $name)
+				{
+					unset($env[$name]);
+				}
+				file_put_contents("/etc/environment", join("\n", $env));
+			}
+		}
+		if(Cone::isWindows() && array_key_exists("file_associations", $data))
+		{
+			foreach($data["file_associations"] as $ext)
 			{
 				shell_exec("Ftype {$ext}file=\nAssoc .{$ext}=");
 			}
 		}
-		if(array_key_exists("uninstall", $this->data))
+		if(array_key_exists("uninstall", $data))
 		{
-			$this->performSteps($this->data["uninstall"]);
+			$this->performSteps($data["uninstall"]);
 		}
 	}
 }

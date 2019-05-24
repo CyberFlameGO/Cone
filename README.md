@@ -7,7 +7,15 @@ An intuitive package manager that works everywhere.
 - **Windows**: Download and execute [install.bat](https://getcone.org/install.bat)
 - **Not Windows**: Open up a terminal and enter `wget -qO- https://getcone.org/install.sh | sudo bash`
 
-## Adding a package
+## Packages
+
+Currently, Cone can install:
+
+- Composer
+- Java
+  - Maven
+
+### Adding a package
 
 You can simply [open an issue](https://github.com/hell-sh/Cone/issues/new) with a link to the project and other information you consider relevant.
 

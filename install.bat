@@ -1,6 +1,6 @@
 @ECHO OFF
 TITLE Cone Installer
-SET CONE_VERSION=0.4.0
+SET CONE_VERSION=0.5.0
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
@@ -70,6 +70,10 @@ IF EXIST _update_ (
 "%php%" -r "exit(strpos(getenv('PATH'), '%cd%\path\;') !== false ? 1 : 0);"
 IF %errorLevel% == 0 (
 	REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "%cd%\path\;%PATH%"
+)
+"%php%" -r "exit(strpos(getenv('PATHEXT'), ';.LNK') !== false ? 1 : 0);"
+IF %errorLevel% == 0 (
+	REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATHEXT /T REG_SZ /D "%PATHEXT%;.LNK"
 )
 :: Setting a temporary dummy variable so setx will broadcast WM_SETTINGCHANGE so the PATH & PATHEXT changes are reflected without needing a restart.
 SETX /m DUMMY ""
