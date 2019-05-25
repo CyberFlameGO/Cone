@@ -99,7 +99,14 @@ switch(@$argv[1])
 	$before = count($installed_packages);
 	foreach($packages as $package)
 	{
-		$package->install($installed_packages);
+		try
+		{
+			$package->install($installed_packages);
+		}
+		catch(Exception $e)
+		{
+			echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
+		}
 	}
 	$count = (count($installed_packages) - $before);
 	echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
@@ -132,7 +139,14 @@ switch(@$argv[1])
 	}
 	foreach(Cone::getInstalledPackagesList() as $name => $data)
 	{
-		Cone::getPackage($name)->update();
+		try
+		{
+			Cone::getPackage($name)->update();
+		}
+		catch(Exception $e)
+		{
+			echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
+		}
 	}
 	Cone::removeUnneededDependencies();
 	Cone::updateUnixPackages();
@@ -194,8 +208,15 @@ switch(@$argv[1])
 	foreach($packages as $package)
 	{
 		echo "Removing ".$package."...\n";
-		(new Package($package))->uninstall();
-		unset($installed_packages[$package]);
+		try
+		{
+			(new Package($package))->uninstall();
+			unset($installed_packages[$package]);
+		}
+		catch(Exception $e)
+		{
+			echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
+		}
 	}
 	Cone::removeUnneededDependencies($installed_packages);
 	$count = ($before - count($installed_packages));

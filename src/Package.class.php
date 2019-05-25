@@ -1,5 +1,6 @@
 <?php
 namespace hellsh\Cone;
+use Exception;
 class Package
 {
 	public $name;
@@ -46,6 +47,10 @@ class Package
 		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
 	}
 
+	/**
+	 * @param $steps
+	 * @throws Exception
+	 */
 	function performSteps($steps)
 	{
 		foreach($steps as $step)
@@ -107,8 +112,8 @@ class Package
 						{
 							if(hash_file($algo, $step["name"]) != $hash)
 							{
-								echo "Warning: ".$step["name"]." signature mismatch.\n";
 								unlink($step["name"]);
+								throw new Exception($step["name"]." signature mismatch");
 							}
 						}
 					}
@@ -117,8 +122,7 @@ class Package
 				case "extract":
 					if(!is_file($step["file"]))
 					{
-						echo "Warning: ".$step["file"]." can't be extracted as it doesn't exist.\n";
-						break;
+						throw new Exception($step["file"]." can't be extracted as it doesn't exist");
 					}
 					Cone::extract($step["file"], $step["target"]);
 					break;
@@ -126,8 +130,7 @@ class Package
 				case "delete":
 					if(!file_exists($step["file"]))
 					{
-						echo "Warning: ".$step["file"]." can't be deleted as it doesn't exist.\n";
-						break;
+						throw new Exception($step["file"]." can't be deleted as it doesn't exist.");
 					}
 					Cone::reallyDelete($step["file"]);
 					break;
@@ -135,8 +138,7 @@ class Package
 				case "keep":
 					if(!file_exists($step["file"]))
 					{
-						echo "Warning: ".$step["file"]." can't be kept as it doesn't exist.\n";
-						break;
+						throw new Exception($step["file"]." can't be kept as it doesn't exist");
 					}
 					$dir = __DIR__."/../packages/".$this->name."/";
 					if(!is_dir($dir) && $step["as"] != "")
@@ -147,11 +149,16 @@ class Package
 					break;
 
 				default:
-					echo "Error: Unknown step type: ".$step["type"]."\n";
+					throw new Exception("Unknown step type: ".$step["type"]);
 			}
 		}
 	}
 
+	/**
+	 * @param $installed_packages
+	 * @param $dependency_of
+	 * @throws Exception
+	 */
 	function install(&$installed_packages, $dependency_of = null)
 	{
 		if($this->isInstalled())
@@ -173,7 +180,7 @@ class Package
 						break;
 
 					default:
-						echo "Error: Unknown prerequisite type: ".$prerequisite["type"]."\n";
+						throw new Exception("Unknown prerequisite type: ".$prerequisite["type"]);
 				}
 			}
 		}
@@ -207,40 +214,37 @@ class Package
 		{
 			if($working_directory === false)
 			{
-				echo "Warning: Can't create any shortcuts as no file was kept.\n";
+				throw new Exception("Can't create any shortcuts as no file was kept");
 			}
-			else
+			foreach($this->data["shortcuts"] as $name => $data)
 			{
-				foreach($this->data["shortcuts"] as $name => $data)
+				$options = [
+					"working_directory" => $working_directory
+				];
+				if(array_key_exists("target_arguments", $data))
 				{
-					$options = [
-						"working_directory" => $working_directory
-					];
-					if(array_key_exists("target_arguments", $data))
-					{
-						$options["target_arguments"] = $data["target_arguments"];
-					}
-					if(array_key_exists("target", $data))
-					{
-						$target = $working_directory."/".$data["target"];
-						if(Cone::isWindows())
-						{
-							$target .= $data["target_winext"];
-						}
-						$options["target"] = realpath($target);
-					}
-					else if(array_key_exists("target_which", $data))
-					{
-						$options["target"] = Cone::which($data["target_which"]);
-					}
-					else
-					{
-						echo "Error: Shortcut is missing target or target_which.\n";
-					}
-					Cone::createPathShortcut($name, $options);
+					$options["target_arguments"] = $data["target_arguments"];
 				}
-				$installed_packages[$this->name]["shortcuts"] = array_keys($this->data["shortcuts"]);
+				if(array_key_exists("target", $data))
+				{
+					$target = $working_directory."/".$data["target"];
+					if(Cone::isWindows())
+					{
+						$target .= $data["target_winext"];
+					}
+					$options["target"] = realpath($target);
+				}
+				else if(array_key_exists("target_which", $data))
+				{
+					$options["target"] = Cone::which($data["target_which"]);
+				}
+				else
+				{
+					throw new Exception("Shortcut is missing target or target_which");
+				}
+				Cone::createPathShortcut($name, $options);
 			}
+			$installed_packages[$this->name]["shortcuts"] = array_keys($this->data["shortcuts"]);
 		}
 		if(array_key_exists("variables", $this->data))
 		{
@@ -270,16 +274,13 @@ class Package
 		{
 			if($working_directory === false)
 			{
-				echo "Warning: Can't create any file associations as no file was kept.\n";
+				throw new Exception("Can't create any file associations as no file was kept");
 			}
-			else
+			foreach($this->data["file_associations"] as $ext => $cmd)
 			{
-				foreach($this->data["file_associations"] as $ext => $cmd)
-				{
-					shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$working_directory}\\{$cmd}");
-				}
-				$installed_packages[$this->name]["file_associations"] = array_keys($this->data["file_associations"]);
+				shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$working_directory}\\{$cmd}");
 			}
+			$installed_packages[$this->name]["file_associations"] = array_keys($this->data["file_associations"]);
 		}
 		if(array_key_exists("version", $this->data))
 		{
@@ -291,6 +292,9 @@ class Package
 		}
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	function update()
 	{
 		if(array_key_exists("update", $this->data))
@@ -299,6 +303,9 @@ class Package
 		}
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	function uninstall()
 	{
 		if(!self::isInstalled())

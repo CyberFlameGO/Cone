@@ -1,11 +1,15 @@
 <?php
 namespace hellsh\Cone;
+use Exception;
 final class Cone
 {
 	const VERSION = "0.5.0";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
+	/**
+	 * @var $packages_cache Package[]
+	 */
 	private static $packages_cache;
 	private static $installed_packages_list_cache;
 
@@ -252,8 +256,15 @@ final class Cone
 				if(!$needed)
 				{
 					echo "Removing unneeded dependency ".$name."...\n";
-					$package->uninstall();
-					unset($installed_packages[$name]);
+					try
+					{
+						$package->uninstall();
+						unset($installed_packages[$name]);
+					}
+					catch(Exception $e)
+					{
+						echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
+					}
 				}
 			}
 		}
