@@ -60,6 +60,7 @@ switch(@$argv[1])
 	break;
 
 	case "i":
+	case "git":
 	case "get":
 	case "instal":
 	case "install":
@@ -70,6 +71,10 @@ switch(@$argv[1])
 	if(empty($argv[2]))
 	{
 		die("Syntax: cone install <packages ...>\n");
+	}
+	if(in_array($argv[2], ["gud", "good"]))
+	{
+		die("I'm afraid there's no easy way for that.\n");
 	}
 	$installed_packages = Cone::getInstalledPackagesList();
 	$packages = [];
