@@ -47,6 +47,38 @@ class Package
 		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
 	}
 
+	function platformSwitch($step, $callback)
+	{
+		if(Cone::isWindows())
+		{
+			if(array_key_exists("windows", $step))
+			{
+				$callback("windows");
+			}
+		}
+		else
+		{
+			if(array_key_exists("unix", $step))
+			{
+				$callback("unix");
+			}
+			if(Cone::isLinux())
+			{
+				if(array_key_exists("linux", $step))
+				{
+					$callback("linux");
+				}
+			}
+			else if(Cone::isMacOS())
+			{
+				if(array_key_exists("macos", $step))
+				{
+					$callback("macos");
+				}
+			}
+		}
+	}
+
 	/**
 	 * @param $steps
 	 * @throws Exception
@@ -58,34 +90,32 @@ class Package
 			switch($step["type"])
 			{
 				case "platform_switch":
-					if(Cone::isWindows())
+					$this->platformSwitch($step, function($platform) use ($step)
 					{
-						if(array_key_exists("windows", $step))
-						{
-							$this->performSteps($step["windows"]);
-						}
-					}
-					else
+						$this->performSteps($step[$platform]);
+					});
+					break;
+
+				case "platform_download_and_extract":
+					$this->platformSwitch($step, function($platform) use ($step)
 					{
-						if(array_key_exists("unix", $step))
-						{
-							$this->performSteps($step["unix"]);
-						}
-						if(Cone::isLinux())
-						{
-							if(array_key_exists("linux", $step))
-							{
-								$this->performSteps($step["linux"]);
-							}
-						}
-						else if(Cone::isMacOS())
-						{
-							if(array_key_exists("macos", $step))
-							{
-								$this->performSteps($step["macos"]);
-							}
-						}
-					}
+						$archive_ext = ($platform == "windows" ? ".zip" : ".tar.gz");
+						$this->performSteps([
+							[
+								"type" => "download",
+								"target" => $step["target"].$archive_ext
+							] + $step[$platform],
+							[
+								"type" => "extract",
+								"file" => $step["target"].$archive_ext,
+								"target" => $step["target"]
+							],
+							[
+								"type" => "delete",
+								"file" => $step["target"].$archive_ext
+							]
+						]);
+					});
 					break;
 
 				case "shell_exec":
@@ -105,15 +135,15 @@ class Package
 					break;
 
 				case "download":
-					Cone::download($step["url"], $step["name"]);
+					Cone::download($step["url"], $step["target"]);
 					if(array_key_exists("hash", $step))
 					{
 						foreach($step["hash"] as $algo => $hash)
 						{
-							if(hash_file($algo, $step["name"]) != $hash)
+							if(hash_file($algo, $step["target"]) != $hash)
 							{
-								unlink($step["name"]);
-								throw new Exception($step["name"]." signature mismatch");
+								unlink($step["target"]);
+								throw new Exception($step["target"]." signature mismatch");
 							}
 						}
 					}

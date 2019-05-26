@@ -11,7 +11,7 @@
 			"install": [
 				{
 					"type": "download",
-					"name": "installer",
+					"target": "installer",
 					"url": "https://getcomposer.org/installer"
 				},
 				{
@@ -52,62 +52,26 @@
 			],
 			"install": [
 				{
-					"type": "platform_switch",
-					"windows": [
-						{
-							"type": "download",
-							"name": "tmp.zip",
-							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_windows-x64_bin.zip",
-							"hash": {
-								"sha256": "fc7d9eee3c09ea6548b00ca25dbf34a348b3942c815405a1428e0bfef268d08d"
-							}
+					"type": "platform_download_and_extract",
+					"target": "tmp",
+					"windows": {
+						"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_windows-x64_bin.zip",
+						"hash": {
+							"sha256": "fc7d9eee3c09ea6548b00ca25dbf34a348b3942c815405a1428e0bfef268d08d"
 						}
-					],
-					"macos": [
-						{
-							"type": "download",
-							"name": "tmp.tar.gz",
-							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_osx-x64_bin.tar.gz",
-							"hash": {
-								"sha256": "cba6f42f82496f62c51fb544e243d440984d442bdc906550a30428d8be6189e5"
-							}
+					},
+					"macos": {
+						"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_osx-x64_bin.tar.gz",
+						"hash": {
+							"sha256": "cba6f42f82496f62c51fb544e243d440984d442bdc906550a30428d8be6189e5"
 						}
-					],
-					"linux": [
-						{
-							"type": "download",
-							"name": "tmp.tar.gz",
-							"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz",
-							"hash": {
-								"sha256": "151eb4ec00f82e5e951126f572dc9116104c884d97f91be14ec11e85fc2dd626"
-							}
+					},
+					"linux": {
+						"url": "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz",
+						"hash": {
+							"sha256": "151eb4ec00f82e5e951126f572dc9116104c884d97f91be14ec11e85fc2dd626"
 						}
-					]
-				},
-				{
-					"type": "platform_switch",
-					"windows": [
-						{
-							"type": "extract",
-							"file": "tmp.zip",
-							"target": "tmp"
-						},
-						{
-							"type": "delete",
-							"file": "tmp.zip"
-						}
-					],
-					"unix": [
-						{
-							"type": "extract",
-							"file": "tmp.tar.gz",
-							"target": "tmp"
-						},
-						{
-							"type": "delete",
-							"file": "tmp.tar.gz"
-						}
-					]
+					}
 				},
 				{
 					"type": "keep",
@@ -152,46 +116,14 @@
 			],
 			"install": [
 				{
-					"type": "platform_switch",
-					"windows": [
-						{
-							"type": "download",
-							"name": "tmp.zip",
-							"url": "http://mirror.easyname.ch/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.zip"
-						}
-					],
-					"unix": [
-						{
-							"type": "download",
-							"name": "tmp.tar.gz",
-							"url": "http://mirror.easyname.ch/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz"
-						}
-					]
-				},
-				{
-					"type": "platform_switch",
-					"windows": [
-						{
-							"type": "extract",
-							"file": "tmp.zip",
-							"target": "tmp"
-						},
-						{
-							"type": "delete",
-							"file": "tmp.zip"
-						}
-					],
-					"unix": [
-						{
-							"type": "extract",
-							"file": "tmp.tar.gz",
-							"target": "tmp"
-						},
-						{
-							"type": "delete",
-							"file": "tmp.tar.gz"
-						}
-					]
+					"type": "platform_download_and_extract",
+					"target": "tmp",
+					"windows": {
+						"url": "http://mirror.easyname.ch/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.zip"
+					},
+					"unix": {
+						"url": "http://mirror.easyname.ch/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz"
+					}
 				},
 				{
 					"type": "keep",
