@@ -156,10 +156,11 @@ class Package
 
 	/**
 	 * @param $installed_packages
+	 * @param $env_flag
 	 * @param $dependency_of
 	 * @throws Exception
 	 */
-	function install(&$installed_packages, $dependency_of = null)
+	function install(&$installed_packages, &$env_flag = false, $dependency_of = null)
 	{
 		if($this->isInstalled())
 		{
@@ -196,7 +197,7 @@ class Package
 		{
 			foreach($this->getDependencies() as $dependency)
 			{
-				$dependency->install($installed_packages, $this->name);
+				$dependency->install($installed_packages, $env_flag, $this->name);
 			}
 			echo "All ".$this->name." dependencies are installed.\n";
 		}
@@ -267,6 +268,7 @@ class Package
 					file_put_contents("/etc/environment", file_get_contents("/etc/environment")."{$name}={$value}\n");
 				}
 				putenv("{$name}={$value}");
+				$env_flag = true;
 			}
 			$installed_packages[$this->name]["variables"] = array_keys($this->data["variables"]);
 		}

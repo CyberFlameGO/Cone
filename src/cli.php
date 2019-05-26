@@ -102,11 +102,12 @@ switch(@$argv[1])
 		array_push($packages, $package);
 	}
 	$before = count($installed_packages);
+	$env_flag = false;
 	foreach($packages as $package)
 	{
 		try
 		{
-			$package->install($installed_packages);
+			$package->install($installed_packages, $env_flag);
 		}
 		catch(Exception $e)
 		{
@@ -115,6 +116,10 @@ switch(@$argv[1])
 	}
 	$count = (count($installed_packages) - $before);
 	echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
+	if($env_flag)
+	{
+		echo "You might need to open a new terminal window to use installed packages, as environment variables were added.\n";
+	}
 	Cone::setInstalledPackagesList($installed_packages);
 	break;
 
