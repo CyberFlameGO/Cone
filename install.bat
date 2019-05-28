@@ -57,10 +57,6 @@ MOVE tmp\Cone-%CONE_VERSION%\packages.json packages.json
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.bat DEL path\cone.bat
 MOVE tmp\Cone-%CONE_VERSION%\start.bat path\cone.bat
-:: <deprecated>
-IF EXIST path\cone.lnk DEL path\cone.lnk
-IF EXIST icon.ico DEL icon.ico
-:: </deprecated>
 RMDIR /S /Q tmp
 IF EXIST _update_ (
 	DEL _update_
