@@ -1,5 +1,5 @@
 {
-	"revision": 0,
+	"revision": 1,
 	"packages": {
 		"composer": {
 			"prerequisites": [
@@ -92,8 +92,8 @@
 					"target": "bin/java",
 					"target_winext": ".exe"
 				},
-				"keytools": {
-					"target": "bin/keytools",
+				"keytool": {
+					"target": "bin/keytool",
 					"target_winext": ".exe"
 				}
 			},
