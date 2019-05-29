@@ -8,7 +8,7 @@ switch(@$argv[1])
 	case "info":
 	case "about":
 	case "version":
-	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackagesVersion().".\nUse 'cone update' to check for updates.\n";
+	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackageListRevision().".\nUse 'cone update' to check for updates.\n";
 	break;
 
 	case "list":
@@ -137,9 +137,9 @@ switch(@$argv[1])
 		exit;
 	}
 	echo "Cone is up-to-date.\n";
-	if($remote_versions["packages"] > Cone::getPackagesVersion())
+	if($remote_versions["packages"] > Cone::getPackageListRevision())
 	{
-		echo "Updating package list rev. ".Cone::getPackagesVersion()["revision"]." to rev. ".$remote_versions["packages"]."...";
+		echo "Updating package list rev. ".Cone::getPackageListRevision()." to rev. ".$remote_versions["packages"]."...";
 		file_put_contents(Cone::PACKAGES_FILE, file_get_contents("https://getcone.org/packages.json"));
 		echo " Done.\n";
 	}

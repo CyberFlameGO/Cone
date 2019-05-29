@@ -144,7 +144,7 @@ final class Cone
 		return self::$packages_json_cache;
 	}
 
-	static function getPackagesVersion()
+	static function getPackageListRevision()
 	{
 		return self::getPackagesJson()["revision"];
 	}
