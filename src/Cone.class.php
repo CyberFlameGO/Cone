@@ -118,7 +118,7 @@ final class Cone
 		}
 		else
 		{
-			shell_exec('wget \\"'.$url.'\\" -O \\"'.$output.'\\"');
+			shell_exec("wget \"{$url}\" -O \"{$output}\"");
 		}
 	}
 
