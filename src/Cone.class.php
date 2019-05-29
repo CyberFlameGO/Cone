@@ -93,7 +93,11 @@ final class Cone
 		{
 			return;
 		}
-		if(is_dir($path))
+		if(self::isUnix())
+		{
+			shell_exec("rm -rf ".escapeshellarg($path));
+		}
+		else if(is_dir($path))
 		{
 			foreach(scandir($path) as $file)
 			{
