@@ -215,11 +215,15 @@ class Package
 	 * @param $dependency_of
 	 * @throws Exception
 	 */
-	function install(&$installed_packages, &$env_flag = false, $dependency_of = null)
+	function install(&$installed_packages = [], &$env_flag = false, $dependency_of = null)
 	{
 		if($this->isInstalled())
 		{
 			return;
+		}
+		if(!$installed_packages)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
 		}
 		if(array_key_exists("prerequisites", $this->data))
 		{
@@ -368,6 +372,7 @@ class Package
 		{
 			$installed_packages[$this->name]["uninstall"] = $this->data["uninstall"];
 		}
+		Cone::setInstalledPackagesList($installed_packages);
 	}
 
 	/**

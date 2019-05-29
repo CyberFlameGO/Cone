@@ -120,7 +120,6 @@ switch(@$argv[1])
 	{
 		echo "You might need to open a new terminal window to use installed packages, as environment variables were added.\n";
 	}
-	Cone::setInstalledPackagesList($installed_packages);
 	break;
 
 	case "update":
