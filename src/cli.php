@@ -133,7 +133,7 @@ switch(@$argv[1])
 	if($remote_versions["cone"] != Cone::VERSION)
 	{
 		echo "Cone v".$remote_versions["cone"]." is available.\n";
-		file_put_contents("_update_", "");
+		file_put_contents(__DIR__."/../_update_", "");
 		exit;
 	}
 	echo "Cone is up-to-date.\n";
@@ -167,7 +167,7 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
-	file_put_contents("_update_", "");
+	file_put_contents(__DIR__."/../_update_", "");
 	break;
 
 	case "rm":

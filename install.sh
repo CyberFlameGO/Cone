@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONE_VERSION=0.5.1
+CONE_VERSION=0.5.2
 
 if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."
@@ -50,7 +50,7 @@ mv Cone-$CONE_VERSION/packages.json packages.json
 if [ -f /usr/bin/cone ]; then
 	rm /usr/bin/cone
 fi
-mv Cone-$CONE_VERSION/start.sh /usr/bin/cone
+mv Cone-$CONE_VERSION/cone /usr/bin/cone
 chmod +x /usr/bin/cone
 rm -rf Cone-$CONE_VERSION
 

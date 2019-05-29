@@ -37,7 +37,11 @@
 			"shortcuts": {
 				"composer": {
 					"target_which": "php",
-					"target_arguments": "composer.phar"
+					"target_arguments": [
+						{
+							"path": "composer.phar"
+						}
+					]
 				}
 			}
 		},
@@ -145,6 +149,21 @@
 					"target_winext": ".cmd"
 				}
 			}
+		},
+		"php-mbstring": {
+			"aliases": ["mbstring"],
+			"install": [
+				{
+					"type": "enable_php_extension",
+					"name": "mbstring"
+				}
+			],
+			"uninstall": [
+				{
+					"type": "disable_php_extension",
+					"name": "mbstring"
+				}
+			]
 		}
 	}
 }

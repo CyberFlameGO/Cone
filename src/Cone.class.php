@@ -3,7 +3,7 @@ namespace hellsh\Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.5.1";
+	const VERSION = "0.5.2";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -81,46 +81,6 @@ final class Cone
 		$dir = self::getPhpDir();
 		copy($dir."/php.ini-development", $dir."/php.ini");
 		return $dir."/php.ini";
-	}
-
-	static function createPathShortcut($name, $options)
-	{
-		$path = self::getPathFolder().$name;
-		if(self::isWindows())
-		{
-			$path .= ".lnk";
-			file_put_contents($path, "");
-			$path = realpath($path);
-			unlink($path);
-			$vbs = "Set oWS = WScript.CreateObject(\"WScript.Shell\")\nSet oLink = oWS.CreateShortcut(\"$path\")\noLink.TargetPath = \"".$options["target"]."\"\n";
-			if(array_key_exists("target_arguments", $options))
-			{
-				$vbs .= "oLink.Arguments = \"".$options["target_arguments"]."\"\n";
-			}
-			if(array_key_exists("working_directory", $options))
-			{
-				$vbs .= "oLink.WorkingDirectory = \"".$options["working_directory"]."\"\n";
-			}
-			$vbs .= "oLink.Save";
-			file_put_contents("tmp.vbs", $vbs);
-			shell_exec("cscript /nologo tmp.vbs");
-			unlink("tmp.vbs");
-		}
-		else
-		{
-			$bash = "#!/bin/bash\n";
-			if(array_key_exists("working_directory", $options))
-			{
-				$bash .= "cd ".$options["working_directory"]."\n";
-			}
-			$bash .= $options["target"];
-			if(array_key_exists("target_arguments", $options))
-			{
-				$bash .= " ".$options["target_arguments"];
-			}
-			file_put_contents($path, $bash." \"\$@\"");
-			shell_exec("chmod +x ".$path);
-		}
 	}
 
 	static function reallyDelete($path)

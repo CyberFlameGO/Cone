@@ -123,11 +123,36 @@ class Package
 					break;
 
 				case "enable_php_extension":
-					file_put_contents(php_ini_loaded_file(), str_replace("\n;extension=".$step["name"], "\nextension=".$step["name"], file_get_contents(php_ini_loaded_file())));
+					file_put_contents(
+						php_ini_loaded_file(),
+						str_replace(
+							[
+								"\n;extension=".$step["name"],
+								"\n;extension=php_".$step["name"].".dll"
+							], [
+								"\nextension=".$step["name"],
+								"\nextension=php_".$step["name"].".dll"
+							],
+							file_get_contents(php_ini_loaded_file())
+						)
+					);
 					break;
 
 				case "disable_php_extension":
-					file_put_contents(php_ini_loaded_file(), str_replace("\nextension=".$step["name"], "\n;extension=".$step["name"], file_get_contents(php_ini_loaded_file())));
+					file_put_contents(
+						php_ini_loaded_file(),
+						str_replace(
+							[
+								"\nextension=".$step["name"],
+								"\nextension=php_".$step["name"].".dll"
+							],
+							[
+								"\n;extension=".$step["name"],
+								"\n;extension=php_".$step["name"].".dll"
+							],
+							file_get_contents(php_ini_loaded_file())
+						)
+					);
 					break;
 
 				case "install_unix_package":
@@ -239,41 +264,62 @@ class Package
 		{
 			$this->performSteps($this->data["install"]);
 		}
-		$working_directory = realpath(__DIR__."/../packages/".$this->name);
+		$dir = realpath(__DIR__."/../packages/".$this->name);
 		$installed_packages[$this->name] = ["manual" => ($dependency_of === null)];
 		if(array_key_exists("shortcuts", $this->data))
 		{
-			if($working_directory === false)
+			if($dir === false)
 			{
 				throw new Exception("Can't create any shortcuts as no file was kept");
 			}
 			foreach($this->data["shortcuts"] as $name => $data)
 			{
-				$options = [
-					"working_directory" => $working_directory
-				];
-				if(array_key_exists("target_arguments", $data))
-				{
-					$options["target_arguments"] = $data["target_arguments"];
-				}
 				if(array_key_exists("target", $data))
 				{
-					$target = $working_directory."/".$data["target"];
+					$target = $dir."/".$data["target"];
 					if(Cone::isWindows())
 					{
 						$target .= $data["target_winext"];
 					}
-					$options["target"] = realpath($target);
+					$target = realpath($target);
 				}
 				else if(array_key_exists("target_which", $data))
 				{
-					$options["target"] = Cone::which($data["target_which"]);
+					$target = Cone::which($data["target_which"]);
 				}
 				else
 				{
 					throw new Exception("Shortcut is missing target or target_which");
 				}
-				Cone::createPathShortcut($name, $options);
+				if(!$target)
+				{
+					throw new Exception("Can't create a shortcut to a target that doesn't exist");
+				}
+				$target = "\"{$target}\" ";
+				if(array_key_exists("target_arguments", $data))
+				{
+					foreach($data["target_arguments"] as $arg)
+					{
+						if(array_key_exists("path", $arg))
+						{
+							$target .= "\"".realpath($dir."/".$arg["path"])."\" ";
+						}
+						else
+						{
+							$target .= $arg["value"]." ";
+						}
+					}
+				}
+				$path = Cone::getPathFolder().$name;
+				if(Cone::isWindows())
+				{
+					file_put_contents($path.".bat", $target."%*");
+				}
+				else
+				{
+					file_put_contents($path, "#!/bin/bash\n{$target}\"\$@\"");
+					shell_exec("chmod +x ".$path);
+				}
 			}
 			$installed_packages[$this->name]["shortcuts"] = array_keys($this->data["shortcuts"]);
 		}
@@ -283,7 +329,7 @@ class Package
 			{
 				if(array_key_exists("path", $data))
 				{
-					$value = realpath($working_directory."/".$data["path"]);
+					$value = realpath($dir."/".$data["path"]);
 				}
 				else
 				{
@@ -304,13 +350,13 @@ class Package
 		}
 		if(Cone::isWindows() && array_key_exists("file_associations", $this->data))
 		{
-			if($working_directory === false)
+			if($dir === false)
 			{
 				throw new Exception("Can't create any file associations as no file was kept");
 			}
 			foreach($this->data["file_associations"] as $ext => $cmd)
 			{
-				shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$working_directory}\\{$cmd}");
+				shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$dir}\\{$cmd}");
 			}
 			$installed_packages[$this->name]["file_associations"] = array_keys($this->data["file_associations"]);
 		}
@@ -354,7 +400,7 @@ class Package
 		{
 			foreach($data["shortcuts"] as $name)
 			{
-				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".lnk" : ""));
+				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".bat" : ""));
 			}
 		}
 		if(array_key_exists("variables", $data))
