@@ -3,7 +3,7 @@ namespace hellsh\Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.5.3";
+	const VERSION = "0.5.4";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;

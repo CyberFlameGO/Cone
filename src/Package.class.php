@@ -278,28 +278,24 @@ class Package
 			}
 			foreach($this->data["shortcuts"] as $name => $data)
 			{
-				if(array_key_exists("target", $data))
+				if(!array_key_exists("target", $data))
 				{
-					$target = $dir."/".$data["target"];
-					if(Cone::isWindows())
-					{
-						$target .= $data["target_winext"];
-					}
-					$target = realpath($target);
+					throw new Exception("Shortcut is missing target");
 				}
-				else if(array_key_exists("target_which", $data))
+				$target = $dir."/".$data["target"];
+				if(Cone::isWindows() && array_key_exists("target_winext", $data))
 				{
-					$target = Cone::which($data["target_which"]);
+					$target .= $data["target_winext"];
+				}
+				$target = realpath($target);
+				if($target)
+				{
+					$target = "\"{$target}\" ";
 				}
 				else
 				{
-					throw new Exception("Shortcut is missing target or target_which");
+					$target = $data["target"]." ";
 				}
-				if(!$target)
-				{
-					throw new Exception("Can't create a shortcut to a target that doesn't exist");
-				}
-				$target = "\"{$target}\" ";
 				if(array_key_exists("target_arguments", $data))
 				{
 					foreach($data["target_arguments"] as $arg)

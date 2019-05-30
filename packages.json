@@ -36,7 +36,7 @@
 			],
 			"shortcuts": {
 				"composer": {
-					"target_which": "php",
+					"target": "php",
 					"target_arguments": [
 						{
 							"path": "composer.phar"
@@ -164,6 +164,40 @@
 					"name": "mbstring"
 				}
 			]
+		},
+		"tcproc": {
+			"version": "1.0.0",
+			"install": [
+				{
+					"type": "platform_download_and_extract",
+					"target": "tmp",
+					"windows": {
+						"url": "https://github.com/hell-sh/tcproc/archive/v1.0.0.zip"
+					},
+					"unix": {
+						"url": "https://github.com/hell-sh/tcproc/archive/v1.0.0.tar.gz"
+					}
+				},
+				{
+					"type": "keep",
+					"file": "tmp/tcproc-1.0.0",
+					"as": ""
+				},
+				{
+					"type": "delete",
+					"file": "tmp"
+				}
+			],
+			"shortcuts": {
+				"tcproc": {
+					"target": "php",
+					"target_arguments": [
+						{
+							"path": "tcproc.php"
+						}
+					]
+				}
+			}
 		}
 	}
 }
