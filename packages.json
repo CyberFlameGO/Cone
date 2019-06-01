@@ -159,6 +159,19 @@
 				}
 			]
 		},
+		"php-gmp": {
+			"aliases": ["gmp"],
+			"install": [
+				{
+					"type": "install_unix_package",
+					"name": "php-gmp"
+				},
+				{
+					"type": "enable_php_extension",
+					"name": "gmp"
+				}
+			]
+		},
 		"tcproc": {
 			"version": "1.0.0",
 			"install": [
