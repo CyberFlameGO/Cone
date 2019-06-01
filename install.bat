@@ -1,6 +1,6 @@
 @ECHO OFF
 TITLE Cone Installer
-SET CONE_VERSION=0.6.1
+SET CONE_VERSION=0.6.2
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
@@ -47,7 +47,7 @@ CD Hell.sh
 IF NOT EXIST Cone\ MKDIR Cone
 CD Cone
 IF EXIST Cone.zip DEL Cone.zip
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://github.com/hell-sh/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile %tmp%\Cone.zip"
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://github.com/getcone/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile %tmp%\Cone.zip"
 
 IF EXIST _update_ (
 	ECHO Updating Cone...
@@ -80,7 +80,9 @@ IF %errorLevel% == 0 (
 SETX /m DUMMY ""
 REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V DUMMY
 
+"%php%" src/cli.php update --post-install
+
 :: Starting a new command prompt Window where PATH & PATHEXT are updated, so the user can get started.
 CD %userprofile%
-START cmd /k "CLS & ECHO Cone is now installed. Use 'cone help' to get started!"
+START cmd /k "CLS & ECHO Cone is now installed. & cone"
 EXIT

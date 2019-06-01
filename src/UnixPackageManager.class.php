@@ -1,5 +1,5 @@
 <?php
-namespace hellsh\Cone;
+namespace Cone;
 use Exception;
 class UnixPackageManager
 {

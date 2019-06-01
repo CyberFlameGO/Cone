@@ -2,5 +2,5 @@
 php /usr/share/cone/src/cli.php "$@"
 if [[ -f /usr/share/cone/_update_ ]]; then
 	echo "Downloading updater..."
-	wget -qO- https://getcone.org/install.sh | bash
+	wget -qO- https://code.getcone.org/install.sh | bash
 fi

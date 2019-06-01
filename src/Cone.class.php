@@ -1,12 +1,11 @@
 <?php
-namespace hellsh\Cone;
+namespace Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.6.1";
+	const VERSION = "0.6.2";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
-	private static $packages_json_cache;
 	/**
 	 * @var $packages_cache Package[]
 	 */
@@ -126,18 +125,10 @@ final class Cone
 		}
 	}
 
-	static function getPackagesJson()
+	static function getRemotePackageLists()
 	{
-		if(self::$packages_json_cache === NULL)
-		{
-			self::$packages_json_cache = json_decode(file_get_contents(self::PACKAGES_FILE), true);
-		}
-		return self::$packages_json_cache;
-	}
-
-	static function getPackageListRevision()
-	{
-		return self::getPackagesJson()["revision"];
+		// TODO: Allow adding and removing from this list
+		return ["https://packages.getcone.org/main.json"];
 	}
 
     /**
@@ -148,7 +139,7 @@ final class Cone
 		if(self::$packages_cache === NULL)
 		{
 			self::$packages_cache = [];
-			foreach(self::getPackagesJson()["packages"] as $raw_package)
+			foreach(json_decode(file_get_contents(self::PACKAGES_FILE), true) as $raw_package)
 			{
 				array_push(self::$packages_cache, new Package($raw_package));
 			}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONE_VERSION=0.6.1
+CONE_VERSION=0.6.2
 
 if [ "$(whoami)" != "root" ]; then
 	echo "This script needs to be run as root."
@@ -30,7 +30,7 @@ echo "Downloading Cone v$CONE_VERSION..."
 if [ -f Cone.tar.gz ]; then
 	rm -f Cone.tar.gz
 fi
-wget https://github.com/hell-sh/Cone/archive/v$CONE_VERSION.tar.gz -O Cone.tar.gz
+wget https://github.com/getcone/Cone/archive/v$CONE_VERSION.tar.gz -O Cone.tar.gz
 
 if [ -f _update_ ]; then
 	echo "Updating Cone..."
@@ -58,5 +58,7 @@ if [ -f _update_ ]; then
 	rm _update_
 	cone update
 else
-	echo "Cone is now installed. Use 'cone help' to get started!"
+	cone update --post-install
+	echo "Cone is now installed."
+	cone
 fi

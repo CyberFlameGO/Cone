@@ -2,16 +2,16 @@
 require __DIR__."/Cone.class.php";
 require __DIR__."/Package.class.php";
 require __DIR__."/UnixPackageManager.class.php";
-use hellsh\Cone\Cone;
-use hellsh\Cone\Package;
-use hellsh\Cone\UnixPackageManager;
+use Cone\Cone;
+use Cone\Package;
+use Cone\UnixPackageManager;
 chdir(__DIR__."\\..");
 switch(@$argv[1])
 {
 	case "info":
 	case "about":
 	case "version":
-	echo "Cone v".Cone::VERSION." using package list rev. ".Cone::getPackageListRevision().".\nUse 'cone update' to check for updates.\n";
+	echo "Cone v".Cone::VERSION."\nUse 'cone update' to check for updates.\n";
 	break;
 
 	case "list":
@@ -142,24 +142,29 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
-	$remote_versions = json_decode(file_get_contents("https://getcone.org/versions.json"), true);
-	if($remote_versions["cone"] != Cone::VERSION)
+	$post_install = isset($argv[2]) && $argv[2] == "--post-install";
+	if($post_install)
 	{
-		echo "Cone v".$remote_versions["cone"]." is available.\n";
-		file_put_contents(__DIR__."/../_update_", "");
-		exit;
-	}
-	echo "Cone is up-to-date.\n";
-	if($remote_versions["packages"] > Cone::getPackageListRevision())
-	{
-		echo "Updating package list rev. ".Cone::getPackageListRevision()." to rev. ".$remote_versions["packages"]."...";
-		file_put_contents(Cone::PACKAGES_FILE, file_get_contents("https://getcone.org/packages.json"));
-		echo " Done.\n";
+		echo "Downloading package list...";
 	}
 	else
 	{
-		echo "Package list is up-to-date.\n";
+		$remote_version = trim(file_get_contents("https://code.getcone.org/version.txt"));
+		if(version_compare($remote_version, Cone::VERSION, ">"))
+		{
+			echo "Cone v".$remote_version." is available.\n";
+			file_put_contents(__DIR__."/../_update_", "");
+			exit;
+		}
+		echo "Cone is up-to-date.\nUpdating package list...";
 	}
+	$packages = [];
+	foreach(Cone::getRemotePackageLists() as $list)
+	{
+		$packages = array_merge($packages, json_decode(file_get_contents($list), true));
+	}
+	file_put_contents(Cone::PACKAGES_FILE, json_encode($packages));
+	echo " Done.\n";
 	foreach(Cone::getInstalledPackagesList() as $name => $data)
 	{
 		try
@@ -172,6 +177,7 @@ switch(@$argv[1])
 		}
 	}
 	Cone::removeUnneededDependencies();
+	/** @noinspection PhpUnhandledExceptionInspection */
 	UnixPackageManager::updateAllPackages();
 	break;
 
