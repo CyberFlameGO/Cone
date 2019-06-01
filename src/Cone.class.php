@@ -3,7 +3,7 @@ namespace hellsh\Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.6.0";
+	const VERSION = "0.6.1";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -140,14 +140,17 @@ final class Cone
 		return self::getPackagesJson()["revision"];
 	}
 
+    /**
+     * @return Package[]
+     */
 	static function getPackages()
 	{
 		if(self::$packages_cache === NULL)
 		{
 			self::$packages_cache = [];
-			foreach(self::getPackagesJson()["packages"] as $name => $data)
+			foreach(self::getPackagesJson()["packages"] as $raw_package)
 			{
-				self::$packages_cache[$name] = new Package($name, $data);
+				array_push(self::$packages_cache, new Package($raw_package));
 			}
 		}
 		return self::$packages_cache;
@@ -155,18 +158,24 @@ final class Cone
 
 	static function getPackage($name, $try_aliases = false)
 	{
-		$package = @self::getPackages()[$name];
-		if($try_aliases && $package === null)
-		{
-			foreach(self::$packages_cache as $p)
-			{
-				if(in_array($name, $p->getAliases()))
-				{
-					return $p;
-				}
-			}
-		}
-		return $package;
+	    foreach(self::getPackages() as $package)
+        {
+            if($package->getName() == $name)
+            {
+                return $package;
+            }
+        }
+	    if($try_aliases)
+	    {
+            foreach(self::$packages_cache as $package)
+            {
+                if(in_array($name, $package->getAliases()))
+                {
+                    return $package;
+                }
+            }
+        }
+		return null;
 	}
 
 	static function getInstalledPackagesList()
@@ -206,7 +215,8 @@ final class Cone
 				}
 				if(!$needed)
 				{
-					echo "Removing unneeded dependency ".$name."...\n";
+					/** @deprecated Fallback if display_name is not set for packages installed before 0.6.1 */
+					echo "Removing unneeded dependency ".(array_key_exists("display_name", $data) ? $data["display_name"] : $name)."...\n";
 					try
 					{
 						$package->uninstall();

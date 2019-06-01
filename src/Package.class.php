@@ -3,24 +3,43 @@ namespace hellsh\Cone;
 use Exception;
 class Package
 {
-	public $name;
 	private $data;
 
-	function __construct($name, $data = [])
+	/**
+	 * @param $data array
+	 */
+	function __construct($data)
 	{
-		$this->name = $name;
 		$this->data = $data;
 	}
 
-	function isInstalled()
-	{
-		return array_key_exists($this->name, Cone::getInstalledPackagesList());
-	}
+	function getName()
+    {
+        return $this->data["name"];
+    }
+
+    function getDisplayName()
+    {
+        if(array_key_exists("display_name", $this->data))
+        {
+            return $this->data["display_name"];
+        }
+        if($this->isInstalled())
+        {
+            return $this->getInstallData()["display_name"];
+        }
+        return strtoupper(substr($this->getName(), 0, 1)).substr($this->getName(), 1);
+    }
 
 	function getInstallData()
 	{
-		return @Cone::getInstalledPackagesList()[$this->name];
+		return @Cone::getInstalledPackagesList()[$this->getName()];
 	}
+
+    function isInstalled()
+    {
+        return $this->getInstallData() !== null;
+    }
 
 	function isManuallyInstalled()
 	{
@@ -37,7 +56,7 @@ class Package
 		$dependencies = [];
 		foreach($this->getDependenciesList() as $name)
 		{
-			$dependencies[$name] = Cone::getPackage($name);
+			array_push($dependencies, Cone::getPackage($name));
 		}
 		return $dependencies;
 	}
@@ -79,10 +98,11 @@ class Package
 		}
 	}
 
-	/**
-	 * @param $steps
-	 * @throws Exception
-	 */
+    /**
+     * @param $steps
+     * @return array
+     * @throws Exception
+     */
 	function performSteps($steps)
 	{
 		$inverted_actions = [];
@@ -159,14 +179,20 @@ class Package
 					break;
 
 				case "install_unix_package":
-					array_push($inverted_actions, ["type" => "remove_unix_package"] + $step);
-					UnixPackageManager::installPackage($step["name"]);
+					if(Cone::isUnix())
+					{
+						array_push($inverted_actions, ["type" => "remove_unix_package"] + $step);
+						UnixPackageManager::installPackage($step["name"]);
+					}
 					break;
 
 				case "remove_unix_package":
 				case "uninstall_unix_package":
-					array_push($inverted_actions, ["type" => "install_unix_package"] + $step);
-					UnixPackageManager::removePackage($step["name"]);
+					if(Cone::isUnix())
+					{
+						array_push($inverted_actions, ["type" => "install_unix_package"] + $step);
+						UnixPackageManager::removePackage($step["name"]);
+					}
 					break;
 
 				case "download":
@@ -205,7 +231,7 @@ class Package
 					{
 						throw new Exception($step["file"]." can't be kept as it doesn't exist");
 					}
-					$dir = __DIR__."/../packages/".$this->name."/";
+					$dir = __DIR__."/../packages/".$this->getName()."/";
 					if(!is_dir($dir) && $step["as"] != "")
 					{
 						mkdir($dir);
@@ -222,11 +248,11 @@ class Package
 
 	/**
 	 * @param $installed_packages
-	 * @param $env_flag
+	 * @param $env_arr
 	 * @param $dependency_of
 	 * @throws Exception
 	 */
-	function install(&$installed_packages = [], &$env_flag = false, $dependency_of = null)
+	function install(&$installed_packages = [], &$env_arr = [], $dependency_of = null)
 	{
 		if($this->isInstalled())
 		{
@@ -245,7 +271,7 @@ class Package
 					case "command_not_found":
 						if(Cone::which($prerequisite["value"]) != "")
 						{
-							echo "Not installing ".$this->name." as ".$prerequisite["value"]." is a registered command.\n";
+							echo "Not installing ".$this->getDisplayName()." as ".$prerequisite["value"]." is a registered command.\n";
 							return;
 						}
 						break;
@@ -255,21 +281,29 @@ class Package
 				}
 			}
 		}
-		if($dependency_of === null)
+		echo "Installing ";
+		if($dependency_of !== null)
 		{
-			echo "Installing ".$this->name."...\n";
+			echo $dependency_of." dependency ";
 		}
-		else
+		echo $this->getDisplayName();
+		$installed_packages[$this->getName()] = [
+			"display_name" => $this->getDisplayName(),
+			"manual" => ($dependency_of === null)
+		];
+		if(array_key_exists("version", $this->data))
 		{
-			echo "Installing ".$dependency_of." dependency ".$this->name."...\n";
+			echo " ".$this->data["version"];
+			$installed_packages[$this->getName()]["version"] = $this->data["version"];
 		}
+		echo "...\n";
 		if(array_key_exists("dependencies", $this->data))
 		{
 			foreach($this->getDependencies() as $dependency)
 			{
-				$dependency->install($installed_packages, $env_flag, $this->name);
+				$dependency->install($installed_packages, $env_arr, $this->getDisplayName());
 			}
-			echo "All ".$this->name." dependencies are installed.\n";
+			echo "All ".$this->getDisplayName()." dependencies are installed.\n";
 		}
 		if(!is_dir(__DIR__."/../packages/"))
 		{
@@ -280,8 +314,7 @@ class Package
 		{
 			$uninstall_actions = $this->performSteps($this->data["install"]);
 		}
-		$dir = realpath(__DIR__."/../packages/".$this->name);
-		$installed_packages[$this->name] = ["manual" => ($dependency_of === null)];
+		$dir = realpath(__DIR__."/../packages/".$this->getName());
 		if(array_key_exists("shortcuts", $this->data))
 		{
 			if($dir === false)
@@ -333,7 +366,7 @@ class Package
 					shell_exec("chmod +x ".$path);
 				}
 			}
-			$installed_packages[$this->name]["shortcuts"] = array_keys($this->data["shortcuts"]);
+			$installed_packages[$this->getName()]["shortcuts"] = array_keys($this->data["shortcuts"]);
 		}
 		if(array_key_exists("variables", $this->data))
 		{
@@ -356,9 +389,9 @@ class Package
 					file_put_contents("/etc/environment", file_get_contents("/etc/environment")."{$name}={$value}\n");
 				}
 				putenv("{$name}={$value}");
-				$env_flag = true;
+				array_push($env_arr, $env_arr);
 			}
-			$installed_packages[$this->name]["variables"] = array_keys($this->data["variables"]);
+			$installed_packages[$this->getName()]["variables"] = array_keys($this->data["variables"]);
 		}
 		if(Cone::isWindows() && array_key_exists("file_associations", $this->data))
 		{
@@ -368,13 +401,9 @@ class Package
 			}
 			foreach($this->data["file_associations"] as $ext => $cmd)
 			{
-				shell_exec("Assoc .{$ext}={$ext}file\nFtype {$ext}file={$dir}\\{$cmd}");
+				shell_exec("Ftype {$ext}file={$dir}\\{$cmd}\nAssoc .{$ext}={$ext}file");
 			}
-			$installed_packages[$this->name]["file_associations"] = array_keys($this->data["file_associations"]);
-		}
-		if(array_key_exists("version", $this->data))
-		{
-			$installed_packages[$this->name]["version"] = $this->data["version"];
+			$installed_packages[$this->getName()]["file_associations"] = array_keys($this->data["file_associations"]);
 		}
 		if(array_key_exists("uninstall", $this->data))
 		{
@@ -382,7 +411,7 @@ class Package
 		}
 		if($uninstall_actions)
 		{
-			$installed_packages[$this->name]["uninstall"] = $uninstall_actions;
+			$installed_packages[$this->getName()]["uninstall"] = $uninstall_actions;
 		}
 		Cone::setInstalledPackagesList($installed_packages);
 	}
@@ -396,6 +425,12 @@ class Package
 		{
 			$this->performSteps($this->data["update"]);
 		}
+		else if(array_key_exists("version", $this->data) && version_compare($this->data["version"], $this->getInstallData()["version"], ">"))
+		{
+			echo "Updating ".$this->getDisplayName()."...\n";
+			$this->uninstall();
+			$this->install();
+		}
 	}
 
 	/**
@@ -407,7 +442,7 @@ class Package
 		{
 			return;
 		}
-		$dir = __DIR__."/../packages/".$this->name;
+		$dir = __DIR__."/../packages/".$this->getName();
 		if(is_dir($dir))
 		{
 			Cone::reallyDelete($dir);

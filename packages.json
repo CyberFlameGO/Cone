@@ -1,7 +1,8 @@
 {
 	"revision": 0,
-	"packages": {
-		"composer": {
+	"packages": [
+		{
+			"name": "composer",
 			"prerequisites": [
 				{
 					"type": "command_not_found",
@@ -45,7 +46,9 @@
 				}
 			}
 		},
-		"openjdk": {
+		{
+			"name": "openjdk",
+			"display_name": "OpenJDK (Java)",
 			"aliases": ["java", "jdk", "default-jdk"],
 			"version": "12.0.1",
 			"prerequisites": [
@@ -106,7 +109,8 @@
 				"jar": "bin/java.exe -jar %1"
 			}
 		},
-		"maven": {
+		{
+			"name": "maven",
 			"aliases": ["mvn"],
 			"version": "3.6.1",
 			"prerequisites": [
@@ -150,7 +154,9 @@
 				}
 			}
 		},
-		"php-mbstring": {
+		{
+			"name": "php-mbstring",
+			"display_name": "PHP MBString Extension",
 			"aliases": ["mbstring"],
 			"install": [
 				{
@@ -159,7 +165,9 @@
 				}
 			]
 		},
-		"php-gmp": {
+		{
+			"name": "php-gmp",
+			"display_name": "PHP GMP Extension",
 			"aliases": ["gmp"],
 			"install": [
 				{
@@ -172,7 +180,9 @@
 				}
 			]
 		},
-		"tcproc": {
+		{
+			"name": "tcproc",
+			"display_name": "TCProc",
 			"version": "1.0.0",
 			"install": [
 				{
@@ -206,5 +216,5 @@
 				}
 			}
 		}
-	}
+	]
 }

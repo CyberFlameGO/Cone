@@ -10,6 +10,10 @@ class UnixPackageManager
 		return ["aptitude", "apt-get", "pacman"];
 	}
 
+	/**
+	 * @return mixed|string
+	 * @throws Exception
+	 */
 	static function getNativePackageManager()
 	{
 		if(Cone::isWindows())
@@ -30,6 +34,10 @@ class UnixPackageManager
 		throw new Exception("Unable to find native package manager");
 	}
 
+	/**
+	 * @param $package
+	 * @throws Exception
+	 */
 	static function installPackage($package)
 	{
 		switch($mgr = self::getNativePackageManager())
@@ -44,6 +52,9 @@ class UnixPackageManager
 		}
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	static function updateAllPackages()
 	{
 		switch($mgr = self::getNativePackageManager())
@@ -58,6 +69,10 @@ class UnixPackageManager
 		}
 	}
 
+	/**
+	 * @param $package
+	 * @throws Exception
+	 */
 	static function removePackage($package)
 	{
 		switch($mgr = self::getNativePackageManager())

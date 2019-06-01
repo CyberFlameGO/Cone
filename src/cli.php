@@ -5,6 +5,7 @@ require __DIR__."/UnixPackageManager.class.php";
 use hellsh\Cone\Cone;
 use hellsh\Cone\Package;
 use hellsh\Cone\UnixPackageManager;
+chdir(__DIR__."\\..");
 switch(@$argv[1])
 {
 	case "info":
@@ -21,7 +22,7 @@ switch(@$argv[1])
 	{
 		die("0 packages installed.\n");
 	}
-	echo count($installed_packages)." package".(count($installed_packages) == 1 ? "" : "s")." installed; ";
+	echo count($installed_packages)." package".(count($installed_packages) == 1 ? "" : "s")." installed";
 	$packages = [];
 	$dependencies = [];
 	foreach($installed_packages as $name => $data)
@@ -35,10 +36,18 @@ switch(@$argv[1])
 			$dependencies[$name] = $data;
 		}
 	}
-	echo count($packages)." manually-installed:\n";
+	if(empty($dependencies))
+	{
+		echo ":\n";
+	}
+	else
+	{
+		echo "; ".count($packages)." manually-installed:\n";
+	}
 	foreach($packages as $name => $data)
 	{
-		echo $name;
+		/** @deprecated Fallback if display_name is not set for packages installed before 0.6.1 */
+		echo array_key_exists("display_name", $data) ? $data["display_name"] : $name;
 		if(array_key_exists("version", $data))
 		{
 			echo " v".$data["version"];
@@ -49,15 +58,18 @@ switch(@$argv[1])
 	{
 		die("and 0 dependencies.\n");
 	}
-	echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
-	foreach($dependencies as $name => $data)
+	else
 	{
-		echo $name;
-		if(array_key_exists("version", $data))
+		echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
+		foreach($dependencies as $name => $data)
 		{
-			echo " v".$data["version"];
+			echo $name;
+			if(array_key_exists("version", $data))
+			{
+				echo " v".$data["version"];
+			}
+			echo "\n";
 		}
-		echo "\n";
 	}
 	break;
 
@@ -88,28 +100,28 @@ switch(@$argv[1])
 		{
 			die("Unknown package: ".$name."\n");
 		}
-		if(array_key_exists($package->name, $installed_packages))
+		if(array_key_exists($package->getName(), $installed_packages))
 		{
-			if($installed_packages[$package->name]["manual"])
+			if($installed_packages[$package->getName()]["manual"])
 			{
-				echo $package->name." is already installed.\n";
+				echo $package->getDisplayName()." is already installed.\n";
 			}
 			else
 			{
-				echo $package->name." is already installed; now set to manually installed.\n";
-				$installed_packages[$package->name]["manual"] = true;
+				echo $package->getDisplayName()." is already installed; now set to manually installed.\n";
+				$installed_packages[$package->getName()]["manual"] = true;
 			}
 			continue;
 		}
 		array_push($packages, $package);
 	}
 	$before = count($installed_packages);
-	$env_flag = false;
+	$env_arr = [];
 	foreach($packages as $package)
 	{
 		try
 		{
-			$package->install($installed_packages, $env_flag);
+			$package->install($installed_packages, $env_arr);
 		}
 		catch(Exception $e)
 		{
@@ -118,9 +130,9 @@ switch(@$argv[1])
 	}
 	$count = (count($installed_packages) - $before);
 	echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
-	if($env_flag)
+	if($env_arr)
 	{
-		echo "You might need to open a new terminal window to use installed packages, as environment variables were added.\n";
+		echo "In order to use the environment variables that were just defined (".join(", ", $env_arr)."), open a new terminal window.\n";
 	}
 	break;
 
@@ -188,15 +200,12 @@ switch(@$argv[1])
 		if(!array_key_exists($name, $installed_packages))
 		{
 			$p = Cone::getPackage($name, true);
-			if($p != null)
+			if($p == null)
 			{
-				$name = $p->name;
+				echo $name." is not installed.\n";
+				continue;
 			}
-		}
-		if(!array_key_exists($name, $installed_packages))
-		{
-			echo $name." is not installed.\n";
-			continue;
+			$name = $p->getName();
 		}
 		array_push($packages, $name);
 	}
@@ -211,7 +220,7 @@ switch(@$argv[1])
 			$p = Cone::getPackage($name);
 			if($p != null && in_array($package, $p->getDependenciesList()))
 			{
-				die($name." depends on ".$package.".\n");
+				die($p->getDisplayName()." depends on ".$package.".\n");
 			}
 		}
 	}
@@ -221,7 +230,7 @@ switch(@$argv[1])
 		echo "Removing ".$package."...\n";
 		try
 		{
-			(new Package($package))->uninstall();
+			(new Package(["name" => $package]))->uninstall();
 			unset($installed_packages[$package]);
 		}
 		catch(Exception $e)
