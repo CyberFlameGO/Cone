@@ -142,8 +142,7 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
-	$post_install = isset($argv[2]) && $argv[2] == "--post-install";
-	if($post_install)
+	if(@$argv[2] == "--post-install")
 	{
 		echo "Downloading package list...";
 	}
@@ -179,6 +178,10 @@ switch(@$argv[1])
 	Cone::removeUnneededDependencies();
 	/** @noinspection PhpUnhandledExceptionInspection */
 	UnixPackageManager::updateAllPackages();
+	if(Cone::isWindows() && @$argv[2] == "--post-update" && file_exists(__DIR__."/../tmp.bat"))
+	{
+		unlink(__DIR__."/../tmp.bat");
+	}
 	break;
 
 	case "force-self-update":

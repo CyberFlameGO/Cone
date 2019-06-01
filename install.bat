@@ -69,7 +69,7 @@ MOVE %tmp%\Cone-%CONE_VERSION%\cone.bat path\cone.bat
 RMDIR /S /Q %tmp%\Cone-%CONE_VERSION%
 IF EXIST _update_ (
 	DEL _update_
-	START cmd /k "cone update"
+	START cmd /k "cone update --post-update"
 	EXIT
 )
 "%php%" -r "exit(strpos(getenv('PATH'), '%cd%\path\;') !== false ? 1 : 0);"
