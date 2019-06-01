@@ -43,10 +43,6 @@ if [ -d src ]; then
 	rm -rf src
 fi
 mv Cone-$CONE_VERSION/src/ src
-if [ -f packages.json ]; then
-	rm -f packages.json
-fi
-mv Cone-$CONE_VERSION/packages.json packages.json
 if [ -f /usr/bin/cone ]; then
 	rm /usr/bin/cone
 fi

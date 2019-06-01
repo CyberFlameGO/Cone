@@ -61,8 +61,6 @@ DEL tmp.vbs
 DEL %tmp%\Cone.zip
 IF EXIST src\ RMDIR /S /Q src
 MOVE %tmp%\Cone-%CONE_VERSION%\src src
-IF EXIST packages.json DEL packages.json
-MOVE %tmp%\Cone-%CONE_VERSION%\packages.json packages.json
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.bat DEL path\cone.bat
 MOVE %tmp%\Cone-%CONE_VERSION%\cone.bat path\cone.bat
