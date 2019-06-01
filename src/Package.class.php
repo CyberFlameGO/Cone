@@ -156,7 +156,12 @@ class Package
 					break;
 
 				case "install_unix_package":
-					Cone::installUnixPackage($step["name"]);
+					UnixPackageManager::installPackage($step["name"]);
+					break;
+
+				case "remove_unix_package":
+				case "uninstall_unix_package":
+					UnixPackageManager::removePackage($step["name"]);
 					break;
 
 				case "download":

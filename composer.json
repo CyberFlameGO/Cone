@@ -5,7 +5,11 @@
 	"type": "library",
 	"license": "MIT",
 	"autoload": {
-		"files": ["src/Cone.class.php", "src/Package.class.php"]
+		"files": [
+			"src/Cone.class.php",
+			"src/Package.class.php",
+			"src/UnixPackageManager.class.php"
+		]
 	},
 	"require": {
 		"ext-json": "*"

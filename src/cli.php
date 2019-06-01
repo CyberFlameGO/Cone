@@ -1,8 +1,10 @@
 <?php
 require __DIR__."/Cone.class.php";
 require __DIR__."/Package.class.php";
+require __DIR__."/UnixPackageManager.class.php";
 use hellsh\Cone\Cone;
 use hellsh\Cone\Package;
+use hellsh\Cone\UnixPackageManager;
 switch(@$argv[1])
 {
 	case "info":
@@ -158,7 +160,7 @@ switch(@$argv[1])
 		}
 	}
 	Cone::removeUnneededDependencies();
-	Cone::updateUnixPackages();
+	UnixPackageManager::updateAllPackages();
 	break;
 
 	case "force-self-update":

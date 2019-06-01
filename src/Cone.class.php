@@ -38,24 +38,6 @@ final class Cone
 		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
 	}
 
-	static function installUnixPackage($name)
-	{
-		if(self::isWindows())
-		{
-			return;
-		}
-		echo shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude -y install $name\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get -y install $name\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -S $name\nfi");
-	}
-
-	static function updateUnixPackages()
-	{
-		if(self::isWindows())
-		{
-			return;
-		}
-		echo shell_exec("if [ \"\$(which aptitude)\" != \"\" ]; then\naptitude update\naptitude -y upgrade\nelif [ \"\$(which apt-get)\" != \"\" ]; then\napt-get update\napt-get -y upgrade\nelif [ \"\$(which pacman)\" != \"\" ]; then\npacman --noconfirm -Syu\nfi");
-	}
-
 	static function getPathFolder()
 	{
 		return self::isWindows() ? __DIR__."/../path/" : "/usr/bin/";
