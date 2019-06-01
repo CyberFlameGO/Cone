@@ -313,7 +313,7 @@ class Package
 				$path = Cone::getPathFolder().$name;
 				if(Cone::isWindows())
 				{
-					file_put_contents($path.".bat", $target."%*");
+					file_put_contents($path.".bat", "@ECHO OFF\n".$target."%*");
 				}
 				else
 				{

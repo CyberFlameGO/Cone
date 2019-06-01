@@ -1,6 +1,6 @@
 @ECHO OFF
 TITLE Cone Installer
-SET CONE_VERSION=0.5.4
+SET CONE_VERSION=0.5.5
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
@@ -17,16 +17,22 @@ IF %errorLevel% == 0 (
 )
 
 CLS
-ECHO Downloading PHP...
-powershell -Command "Invoke-WebRequest https://windows.php.net/downloads/releases/php-7.3.5-nts-Win32-VC15-x86.zip -UseBasicParsing -OutFile php.zip"
+SET PHP_VERSION=7.3.6
+ECHO Downloading PHP %PHP_VERSION%...
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.hell.sh/php-%PHP_VERSION%-nts-Win32-VC15-x86.zip -UseBasicParsing -OutFile %tmp%\php.zip"
 
 ECHO Unpacking PHP...
-powershell -Command "Expand-Archive php.zip -DestinationPath 'PHP 7.3.5'"
-ERASE php.zip
+MKDIR "%tmp%\PHP %PHP_VERSION%"
+ECHO Set s = CreateObject("Shell.Application") > tmp.vbs
+ECHO s.NameSpace("%tmp%\PHP %PHP_VERSION%").CopyHere(s.NameSpace("%tmp%\php.zip").items) >> tmp.vbs
+cscript //nologo tmp.vbs
+DEL tmp.vbs
+DEL %tmp%\php.zip
+MOVE "%tmp%\PHP %PHP_VERSION%" "PHP %PHP_VERSION%"
 
 ECHO Installing PHP...
-SET php=%cd%\PHP 7.3.5\php.exe
-SET PATH=%cd%\PHP 7.3.5\;%PATH%
+SET php=%cd%\PHP %PHP_VERSION%\php.exe
+SET PATH=%cd%\PHP %PHP_VERSION%\;%PATH%
 
 :phpinstalled
 DEL php.txt
@@ -41,23 +47,26 @@ CD Hell.sh
 IF NOT EXIST Cone\ MKDIR Cone
 CD Cone
 IF EXIST Cone.zip DEL Cone.zip
-powershell -Command "Invoke-WebRequest https://github.com/hell-sh/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile Cone.zip"
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://github.com/hell-sh/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile %tmp%\Cone.zip"
 
 IF EXIST _update_ (
 	ECHO Updating Cone...
 ) ELSE (
 	ECHO Installing Cone...
 )
-powershell -Command "Expand-Archive Cone.zip -DestinationPath tmp"
-ERASE Cone.zip
+ECHO Set s = CreateObject("Shell.Application") > tmp.vbs
+ECHO s.NameSpace("%tmp%").CopyHere(s.NameSpace("%tmp%\Cone.zip").items) >> tmp.vbs
+cscript //nologo tmp.vbs
+DEL tmp.vbs
+DEL %tmp%\Cone.zip
 IF EXIST src\ RMDIR /S /Q src
-MOVE tmp\Cone-%CONE_VERSION%\src src
+MOVE %tmp%\Cone-%CONE_VERSION%\src src
 IF EXIST packages.json DEL packages.json
-MOVE tmp\Cone-%CONE_VERSION%\packages.json packages.json
+MOVE %tmp%\Cone-%CONE_VERSION%\packages.json packages.json
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.bat DEL path\cone.bat
-MOVE tmp\Cone-%CONE_VERSION%\cone.bat path\cone.bat
-RMDIR /S /Q tmp
+MOVE %tmp%\Cone-%CONE_VERSION%\cone.bat path\cone.bat
+RMDIR /S /Q %tmp%\Cone-%CONE_VERSION%
 IF EXIST _update_ (
 	DEL _update_
 	START cmd /k "cone update"

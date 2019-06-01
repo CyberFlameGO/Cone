@@ -3,7 +3,7 @@ namespace hellsh\Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.5.4";
+	const VERSION = "0.5.5";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	private static $packages_json_cache;
@@ -61,6 +61,11 @@ final class Cone
 		return self::isWindows() ? __DIR__."/../path/" : "/usr/bin/";
 	}
 
+	static function getTmpFolder()
+	{
+		return self::isWindows() ? getenv("tmp") : "/tmp/";
+	}
+
 	static function which($name)
 	{
 		return trim(shell_exec(self::isWindows() ? "WHERE ".$name." 2>NUL" : "which ".$name));
@@ -116,26 +121,26 @@ final class Cone
 
 	static function download($url, $output)
 	{
-		if(self::isWindows())
-		{
-			shell_exec('powershell -Command "Invoke-WebRequest \\"'.$url.'\\" -UseBasicParsing -OutFile \\"'.$output.'\\""');
-		}
-		else
-		{
-			shell_exec("wget \"{$url}\" -O \"{$output}\"");
-		}
+		shell_exec(self::isWindows() ? "powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest \\\"{$url}\\\" -UseBasicParsing -OutFile \\\"{$output}\\\"\"" : "wget \"{$url}\" -O \"{$output}\"");
 	}
 
 	static function extract($file, $target_dir)
 	{
 		if(self::isWindows())
 		{
-			shell_exec('powershell -Command "Expand-Archive \"'.$file.'\" -DestinationPath \"'.$target_dir.'\""');
+			$tmp = self::getTmpFolder();
+			mkdir("{$tmp}\\Cone_extract");
+			shell_exec("COPY \"{$file}\" \"{$tmp}\\Cone_extract.zip\"");
+			file_put_contents("tmp.vbs", "Set s = CreateObject(\"Shell.Application\")\r\ns.NameSpace(\"{$tmp}\\Cone_extract\").CopyHere(s.NameSpace(\"{$tmp}\\Cone_extract.zip\").items)");
+			shell_exec("cscript //nologo tmp.vbs");
+			unlink("tmp.vbs");
+			unlink("{$tmp}\\Cone_extract.zip");
+			shell_exec("MOVE \"{$tmp}\\Cone_extract\" \"{$target_dir}\"");
 		}
 		else
 		{
 			mkdir($target_dir);
-			shell_exec("tar -xf \"".$file."\" -C \"".$target_dir."\"");
+			shell_exec("tar -xf \"{$file}\" -C \"{$target_dir}\"");
 		}
 	}
 
