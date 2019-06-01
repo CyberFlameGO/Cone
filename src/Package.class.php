@@ -85,6 +85,7 @@ class Package
 	 */
 	function performSteps($steps)
 	{
+		$inverted_actions = [];
 		foreach($steps as $step)
 		{
 			switch($step["type"])
@@ -123,6 +124,7 @@ class Package
 					break;
 
 				case "enable_php_extension":
+					array_push($inverted_actions, ["type" => "disable_php_extension"] + $step);
 					file_put_contents(
 						php_ini_loaded_file(),
 						str_replace(
@@ -139,6 +141,7 @@ class Package
 					break;
 
 				case "disable_php_extension":
+					array_push($inverted_actions, ["type" => "enable_php_extension"] + $step);
 					file_put_contents(
 						php_ini_loaded_file(),
 						str_replace(
@@ -156,11 +159,13 @@ class Package
 					break;
 
 				case "install_unix_package":
+					array_push($inverted_actions, ["type" => "remove_unix_package"] + $step);
 					UnixPackageManager::installPackage($step["name"]);
 					break;
 
 				case "remove_unix_package":
 				case "uninstall_unix_package":
+					array_push($inverted_actions, ["type" => "install_unix_package"] + $step);
 					UnixPackageManager::removePackage($step["name"]);
 					break;
 
@@ -212,6 +217,7 @@ class Package
 					throw new Exception("Unknown step type: ".$step["type"]);
 			}
 		}
+		return $inverted_actions;
 	}
 
 	/**
@@ -269,9 +275,10 @@ class Package
 		{
 			mkdir(__DIR__."/../packages/");
 		}
+		$uninstall_actions = [];
 		if(array_key_exists("install", $this->data))
 		{
-			$this->performSteps($this->data["install"]);
+			$uninstall_actions = $this->performSteps($this->data["install"]);
 		}
 		$dir = realpath(__DIR__."/../packages/".$this->name);
 		$installed_packages[$this->name] = ["manual" => ($dependency_of === null)];
@@ -371,7 +378,11 @@ class Package
 		}
 		if(array_key_exists("uninstall", $this->data))
 		{
-			$installed_packages[$this->name]["uninstall"] = $this->data["uninstall"];
+			$uninstall_actions = array_merge($uninstall_actions, $this->data["uninstall"]);
+		}
+		if($uninstall_actions)
+		{
+			$installed_packages[$this->name]["uninstall"] = $uninstall_actions;
 		}
 		Cone::setInstalledPackagesList($installed_packages);
 	}
