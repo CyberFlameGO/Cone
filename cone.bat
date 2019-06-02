@@ -3,7 +3,7 @@ IF EXIST "%ProgramFiles%\Hell.sh\Cone\_update_" DEL _update_
 php "%ProgramFiles%\Hell.sh\Cone\src\cli.php" %*
 IF EXIST "%ProgramFiles%\Hell.sh\Cone\_uninstall_" (
 	ECHO RMDIR /S /Q "%ProgramFiles%\Hell.sh\Cone" > %tmp%\Cone_uninstall.bat
-	ECHO START cmd /c "DEL \"%tmp%\Cone_uninstall.bat\""  >> %tmp%\Cone_uninstall.bat
+	ECHO START cmd /c "DEL %tmp%\Cone_uninstall.bat" >> %tmp%\Cone_uninstall.bat
 	"%tmp%\Cone_uninstall.bat"
 	ECHO ...aaand it's gone.
 ) ELSE IF EXIST "%ProgramFiles%\Hell.sh\Cone\_update_" (
