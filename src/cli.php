@@ -1,11 +1,11 @@
 <?php
-require __DIR__."/Cone.class.php";
-require __DIR__."/Package.class.php";
-require __DIR__."/UnixPackageManager.class.php";
+chdir(realpath(__DIR__."/.."));
+require "src/Cone.class.php";
+require "src/Package.class.php";
+require "src/UnixPackageManager.class.php";
 use Cone\Cone;
 use Cone\Package;
 use Cone\UnixPackageManager;
-chdir(__DIR__."\\..");
 switch(@$argv[1])
 {
 	case "info":
@@ -152,7 +152,7 @@ switch(@$argv[1])
 		if(version_compare($remote_version, Cone::VERSION, ">"))
 		{
 			echo "Cone v".$remote_version." is available.\n";
-			file_put_contents(__DIR__."/../_update_", "");
+			file_put_contents("_update_", "");
 			exit;
 		}
 		echo "Cone is up-to-date.\nUpdating package list...";
@@ -185,7 +185,7 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
-	file_put_contents(__DIR__."/../_update_", "");
+	file_put_contents("_update_", "");
 	break;
 
 	case "rm":
