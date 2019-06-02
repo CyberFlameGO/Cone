@@ -178,10 +178,6 @@ switch(@$argv[1])
 	Cone::removeUnneededDependencies();
 	/** @noinspection PhpUnhandledExceptionInspection */
 	UnixPackageManager::updateAllPackages();
-	if(Cone::isWindows() && @$argv[2] == "--post-update" && file_exists(__DIR__."/../tmp.bat"))
-	{
-		unlink(__DIR__."/../tmp.bat");
-	}
 	break;
 
 	case "force-self-update":
