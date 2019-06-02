@@ -11,12 +11,15 @@ switch(@$argv[1])
 	case "info":
 	case "about":
 	case "version":
+	case "-version":
+	case "--version":
 	echo "Cone v".Cone::VERSION."\nUse 'cone update' to check for updates.\n";
 	break;
 
+	case "ls":
 	case "list":
-	case "packages":
 	case "installed":
+	case "list-installed":
 	Cone::printInstalledPackagesList();
 	break;
 
@@ -83,6 +86,7 @@ switch(@$argv[1])
 	}
 	break;
 
+	case "up":
 	case "update":
 	case "upgrade":
 	if(!Cone::isAdmin())
@@ -136,6 +140,7 @@ switch(@$argv[1])
 	break;
 
 	case "rm":
+	case "del":
 	case "delete":
 	case "remove":
 	case "uninstal":
