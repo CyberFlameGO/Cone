@@ -156,6 +156,10 @@ switch(@$argv[1])
 	for($i = 2; $i < count($argv); $i++)
 	{
 		$name = strtolower($argv[$i]);
+		if($name == "cone")
+		{
+			die("If you're looking to uninstall Cone, use `cone self-uninstall`.\n");
+		}
 		if(!array_key_exists($name, $installed_packages))
 		{
 			$p = Cone::getPackage($name, true);
