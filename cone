@@ -1,6 +1,13 @@
 #!/bin/bash
+# DO NOT add a "sudo" before "php" -- this entire script has to run as root.
 php /usr/share/cone/src/cli.php "$@"
-if [[ -f /usr/share/cone/_update_ ]]; then
+if [[ -f /usr/share/cone/_uninstall_ ]]; then
+	echo "rm -rf /usr/share/cone" > /tmp/cone_uninstall.sh
+	echo "rm -f /usr/bin/cone" >> /tmp/cone_uninstall.sh
+	echo "rm -f /tmp/cone_uninstall.sh" >> /tmp/cone_uninstall.sh
+	bash /tmp/cone_uninstall.sh
+	echo "...aaand it's gone."
+elif [[ -f /usr/share/cone/_update_ ]]; then
 	echo "Downloading updater..."
 	wget -qO- https://code.getcone.org/install.sh | bash
 fi

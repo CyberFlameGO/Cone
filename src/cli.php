@@ -196,6 +196,52 @@ switch(@$argv[1])
 	Cone::setInstalledPackagesList($installed_packages);
 	break;
 
+	case "self-uninstall":
+	if(!Cone::isAdmin())
+	{
+		die("Cone needs to run as administrator/root to self-uninstall.\n");
+	}
+	$installed_packages = Cone::getInstalledPackagesList();
+	if(count($installed_packages) > 0)
+	{
+		echo "Are you sure you would like to remove Cone and packages installed by Cone from your system?\n";
+		Cone::printInstalledPackagesList($installed_packages);
+		$stdin = fopen("php://stdin", "r");
+		echo "[y/N] ";
+		if(substr(fgets($stdin), 0, 1) != "y")
+		{
+			exit;
+		}
+	}
+	echo "3...";
+	sleep(1);
+	echo " 2...";
+	sleep(1);
+	echo " 1...";
+	sleep(1);
+	echo "\n";
+	if(count($installed_packages) > 0)
+	{
+		echo "Removing installed packages...\n";
+		foreach($installed_packages as $package)
+		{
+			try
+			{
+				(new Package(["name" => $package]))->uninstall();
+			}
+			catch(Exception $e)
+			{
+				echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
+			}
+		}
+	}
+	if(Cone::isWindows())
+	{
+		shell_exec('REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "'.str_replace(realpath("path")."\\;", "", getenv("PATH")).'"');
+	}
+	file_put_contents("_uninstall_", "");
+	break;
+
 	default:
-	echo "Syntax: cone [info|list|update|get <packages ...>|remove <packages ...>]\n";
+	echo "Syntax: cone [info|list|update|get <packages ...>|remove <packages ...>|self-uninstall]\n";
 }
