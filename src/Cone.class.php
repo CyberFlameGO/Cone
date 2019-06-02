@@ -178,6 +178,65 @@ final class Cone
 		return self::$installed_packages_list_cache;
 	}
 
+	static function printInstalledPackagesList($installed_packages = null)
+	{
+		if($installed_packages === null)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		if(count($installed_packages) == 0)
+		{
+			echo "0 packages installed.\n";
+			return;
+		}
+		echo count($installed_packages)." package".(count($installed_packages) == 1 ? "" : "s")." installed";
+		$packages = [];
+		$dependencies = [];
+		foreach($installed_packages as $name => $data)
+		{
+			if($data["manual"])
+			{
+				$packages[$name] = $data;
+			}
+			else
+			{
+				$dependencies[$name] = $data;
+			}
+		}
+		if(empty($dependencies))
+		{
+			echo ":\n";
+		}
+		else
+		{
+			echo "; ".count($packages)." manually-installed:\n";
+		}
+		foreach($packages as $name => $data)
+		{
+			/** @deprecated Fallback if display_name is not set for packages installed before 0.6.1 */
+			echo array_key_exists("display_name", $data) ? $data["display_name"] : $name;
+			if(array_key_exists("version", $data))
+			{
+				echo " v".$data["version"];
+			}
+			echo "\n";
+		}
+		if(empty($dependencies))
+		{
+			return;
+		}
+		echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
+		foreach($dependencies as $name => $data)
+		{
+			echo $name;
+			if(array_key_exists("version", $data))
+			{
+				echo " v".$data["version"];
+			}
+			echo "\n";
+		}
+	}
+
 	static function setInstalledPackagesList($list)
 	{
 		self::$installed_packages_list_cache = $list;
