@@ -3,7 +3,7 @@ namespace Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.6.2";
+	const VERSION = "0.7.0";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	/**
