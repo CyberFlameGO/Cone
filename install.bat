@@ -71,10 +71,8 @@ IF EXIST _update_ (
 	EXIT
 )
 "%php%" -r "exit(strpos(getenv('PATH'), '%cd%\path\;') !== false ? 1 : 0);"
-IF %errorLevel% == 0 (
-	REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "%cd%\path\;%PATH%"
-)
-:: Setting a temporary dummy variable so setx will broadcast WM_SETTINGCHANGE so the PATH & PATHEXT changes are reflected without needing a restart.
+IF %errorLevel% == 0 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "%cd%\path\;%PATH%"
+:: Setting a temporary dummy variable so setx will broadcast WM_SETTINGCHANGE so the PATH changes are reflected without needing a restart.
 SETX /m DUMMY ""
 REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V DUMMY
 
