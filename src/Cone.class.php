@@ -280,4 +280,22 @@ final class Cone
 			}
 		}
 	}
+
+	static function confirmStupidDecision()
+	{
+		echo " [y/N] ";
+		$stdin = fopen("php://stdin", "r");
+		if(substr(fgets($stdin), 0, 1) != "y")
+		{
+			die("Aborting.\n");
+		}
+		fclose($stdin);
+		echo "3...";
+		sleep(1);
+		echo " 2...";
+		sleep(1);
+		echo " 1...";
+		sleep(1);
+		echo "\n";
+	}
 }

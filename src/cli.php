@@ -136,6 +136,8 @@ switch(@$argv[1])
 	{
 		die("Cone needs to run as administrator/root to update.\n");
 	}
+	echo "Do you know what you're doing?";
+	Cone::confirmStupidDecision();
 	file_put_contents("_update_", "");
 	break;
 
@@ -209,27 +211,13 @@ switch(@$argv[1])
 	$installed_packages = Cone::getInstalledPackagesList();
 	if(count($installed_packages) > 0)
 	{
-		echo "Are you sure you would like to remove Cone and packages installed by Cone from your system?\n";
+		echo "You currently have ";
 		Cone::printInstalledPackagesList($installed_packages);
-		$stdin = fopen("php://stdin", "r");
-		echo "[y/N] ";
-		if(substr(fgets($stdin), 0, 1) != "y")
-		{
-			exit;
-		}
-	}
-	echo "3...";
-	sleep(1);
-	echo " 2...";
-	sleep(1);
-	echo " 1...";
-	sleep(1);
-	echo "\n";
-	if(count($installed_packages) > 0)
-	{
-		echo "Removing installed packages...\n";
+		echo "Are you sure you want to remove them and Cone?";
+		Cone::confirmStupidDecision();
 		foreach($installed_packages as $package)
 		{
+			echo "Removing ".$package."...\n";
 			try
 			{
 				(new Package(["name" => $package]))->uninstall();
@@ -239,6 +227,11 @@ switch(@$argv[1])
 				echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
 			}
 		}
+	}
+	else
+	{
+		echo "Are you sure you want to remove Cone from your system?";
+		Cone::confirmStupidDecision();
 	}
 	if(Cone::isWindows())
 	{
