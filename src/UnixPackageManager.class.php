@@ -44,11 +44,11 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-			echo shell_exec("{$mgr} -y install {$package}");
+			passthru("{$mgr} -y install {$package}");
 			break;
 
 			case "pacman":
-			echo shell_exec("pacman --noconfirm -S {$package}");
+			passthru("pacman --noconfirm -S {$package}");
 		}
 	}
 
@@ -61,11 +61,11 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-			echo shell_exec("{$mgr} update && {$mgr} upgrade");
+			passthru("{$mgr} -y update && {$mgr} -y upgrade");
 			break;
 
 			case "pacman":
-			echo shell_exec("pacman --noconfirm -Syu");
+			passthru("pacman --noconfirm -Syu");
 		}
 	}
 
@@ -79,11 +79,11 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-			echo shell_exec("{$mgr} remove {$package}");
+			passthru("{$mgr} -y remove {$package}");
 			break;
 
 			case "pacman":
-			echo shell_exec("pacman --noconfirm -Rs {$package}");
+			passthru("pacman --noconfirm -Rs {$package}");
 		}
 	}
 }
