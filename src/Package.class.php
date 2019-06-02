@@ -389,7 +389,7 @@ class Package
 					file_put_contents("/etc/environment", file_get_contents("/etc/environment")."{$name}={$value}\n");
 				}
 				putenv("{$name}={$value}");
-				array_push($env_arr, $env_arr);
+				array_push($env_arr, $name);
 			}
 			$installed_packages[$this->getName()]["variables"] = array_keys($this->data["variables"]);
 		}
