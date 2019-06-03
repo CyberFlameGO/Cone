@@ -3,7 +3,7 @@ namespace Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.7.2";
+	const VERSION = "0.7.3";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	/**
@@ -169,8 +169,12 @@ final class Cone
 		return null;
 	}
 
-	static function getInstalledPackagesList()
+	static function getInstalledPackagesList(&$installed_packages = null)
 	{
+		if($installed_packages !== null)
+		{
+			return $installed_packages;
+		}
 		if(self::$installed_packages_list_cache === NULL)
 		{
 			self::$installed_packages_list_cache = is_file(self::INSTALLED_PACKAGES_FILE) ? json_decode(file_get_contents(self::INSTALLED_PACKAGES_FILE), true) : [];
@@ -178,7 +182,7 @@ final class Cone
 		return self::$installed_packages_list_cache;
 	}
 
-	static function printInstalledPackagesList($installed_packages = null)
+	static function printInstalledPackagesList(&$installed_packages = null)
 	{
 		if($installed_packages === null)
 		{
@@ -237,22 +241,23 @@ final class Cone
 		}
 	}
 
-	static function setInstalledPackagesList($list)
+	static function setInstalledPackagesList($installed_packages)
 	{
-		self::$installed_packages_list_cache = $list;
-		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($list));
+		self::$installed_packages_list_cache = $installed_packages;
+		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages));
 	}
 
 	static function removeUnneededDependencies(&$installed_packages = null)
 	{
-		if($installed_packages === null)
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
 		{
 			$installed_packages = Cone::getInstalledPackagesList();
 		}
 		foreach($installed_packages as $name => $data)
 		{
 			$package = Cone::getPackage($name);
-			if(!$package->isManuallyInstalled())
+			if(!$package->isManuallyInstalled($installed_packages))
 			{
 				$needed = false;
 				foreach($installed_packages as $name_ => $data_)
@@ -269,8 +274,7 @@ final class Cone
 					echo "Removing unneeded dependency ".(array_key_exists("display_name", $data) ? $data["display_name"] : $name)."...\n";
 					try
 					{
-						$package->uninstall();
-						unset($installed_packages[$name]);
+						$package->uninstall($installed_packages);
 					}
 					catch(Exception $e)
 					{
@@ -278,6 +282,10 @@ final class Cone
 					}
 				}
 			}
+		}
+		if(!$in_flow)
+		{
+			Cone::setInstalledPackagesList($installed_packages);
 		}
 	}
 

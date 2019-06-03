@@ -18,32 +18,32 @@ class Package
         return $this->data["name"];
     }
 
-    function getDisplayName()
+    function getDisplayName(&$installed_packages = null)
     {
         if(array_key_exists("display_name", $this->data))
         {
             return $this->data["display_name"];
         }
-        if($this->isInstalled())
+        if($this->isInstalled($installed_packages))
         {
-            return $this->getInstallData()["display_name"];
+            return $this->getInstallData($installed_packages)["display_name"];
         }
         return strtoupper(substr($this->getName(), 0, 1)).substr($this->getName(), 1);
     }
 
-	function getInstallData()
+	function getInstallData(&$installed_packages = null)
 	{
-		return @Cone::getInstalledPackagesList()[$this->getName()];
+		return @Cone::getInstalledPackagesList($installed_packages)[$this->getName()];
 	}
 
-    function isInstalled()
+    function isInstalled(&$installed_packages = null)
     {
-        return $this->getInstallData() !== null;
+        return $this->getInstallData($installed_packages) !== null;
     }
 
-	function isManuallyInstalled()
+	function isManuallyInstalled(&$installed_packages = null)
 	{
-		return self::getInstallData()["manual"];
+		return self::getInstallData($installed_packages)["manual"];
 	}
 
 	function getDependenciesList()
@@ -66,7 +66,7 @@ class Package
 		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
 	}
 
-	function platformSwitch($step, $callback)
+	protected function platformSwitch($step, $callback)
 	{
 		if(Cone::isWindows())
 		{
@@ -252,15 +252,16 @@ class Package
 	 * @param $dependency_of
 	 * @throws Exception
 	 */
-	function install(&$installed_packages = [], &$env_arr = [], $dependency_of = null)
+	function install(&$installed_packages = null, &$env_arr = [], $dependency_of = null)
 	{
-		if($this->isInstalled())
-		{
-			return;
-		}
-		if(!$installed_packages)
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
 		{
 			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		if($this->isInstalled($installed_packages))
+		{
+			return;
 		}
 		if(array_key_exists("prerequisites", $this->data))
 		{
@@ -286,14 +287,14 @@ class Package
 		{
 			echo $dependency_of." dependency ";
 		}
-		echo $this->getDisplayName();
 		$installed_packages[$this->getName()] = [
-			"display_name" => $this->getDisplayName(),
+			"display_name" => $this->getDisplayName($installed_packages),
 			"manual" => ($dependency_of === null)
 		];
+		echo $installed_packages[$this->getName()]["display_name"];
 		if(array_key_exists("version", $this->data))
 		{
-			echo " ".$this->data["version"];
+			echo " v".$this->data["version"];
 			$installed_packages[$this->getName()]["version"] = $this->data["version"];
 		}
 		echo "...\n";
@@ -413,14 +414,22 @@ class Package
 		{
 			$installed_packages[$this->getName()]["uninstall"] = $uninstall_actions;
 		}
-		Cone::setInstalledPackagesList($installed_packages);
+		if(!$in_flow)
+		{
+			Cone::setInstalledPackagesList($installed_packages);
+		}
 	}
 
 	/**
 	 * @throws Exception
 	 */
-	function update()
+	function update(&$installed_packages = null)
 	{
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
 		if(array_key_exists("update", $this->data))
 		{
 			$this->performSteps($this->data["update"]);
@@ -428,17 +437,27 @@ class Package
 		else if(array_key_exists("version", $this->data) && version_compare($this->data["version"], $this->getInstallData()["version"], ">"))
 		{
 			echo "Updating ".$this->getDisplayName()."...\n";
-			$this->uninstall();
-			$this->install();
+			$this->uninstall($installed_packages);
+			$this->install($installed_packages);
+		}
+		if(!$in_flow)
+		{
+			Cone::removeUnneededDependencies($installed_packages);
+			Cone::setInstalledPackagesList($installed_packages);
 		}
 	}
 
 	/**
 	 * @throws Exception
 	 */
-	function uninstall()
+	function uninstall(&$installed_packages = null)
 	{
-		if(!self::isInstalled())
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		if(!self::isInstalled($installed_packages))
 		{
 			return;
 		}
@@ -492,6 +511,11 @@ class Package
 		if(array_key_exists("uninstall", $data))
 		{
 			$this->performSteps($data["uninstall"]);
+		}
+		unset($installed_packages[$this->getName()]);
+		if(!$in_flow)
+		{
+			Cone::setInstalledPackagesList($installed_packages);
 		}
 	}
 }

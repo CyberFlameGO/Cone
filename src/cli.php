@@ -80,9 +80,10 @@ switch(@$argv[1])
 	}
 	$count = (count($installed_packages) - $before);
 	echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
+	Cone::setInstalledPackagesList($installed_packages);
 	if($env_arr)
 	{
-		echo "In order to use the environment variables that were just defined (".join(", ", $env_arr)."), open a new terminal window.\n";
+		echo "In order to use the environment variable".(count($env_arr) == 1 ? " that was" : "s that were")." just defined (".join(", ", $env_arr)."), open a new terminal window.\n";
 	}
 	break;
 
@@ -115,18 +116,20 @@ switch(@$argv[1])
 	}
 	file_put_contents(Cone::PACKAGES_FILE, json_encode($packages));
 	echo " Done.\n";
-	foreach(Cone::getInstalledPackagesList() as $name => $data)
+	$installed_packages = Cone::getInstalledPackagesList();
+	foreach($installed_packages as $name => $data)
 	{
 		try
 		{
-			Cone::getPackage($name)->update();
+			Cone::getPackage($name)->update($installed_packages);
 		}
 		catch(Exception $e)
 		{
 			echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
 		}
 	}
-	Cone::removeUnneededDependencies();
+	Cone::removeUnneededDependencies($installed_packages);
+	Cone::setInstalledPackagesList($installed_packages);
 	/** @noinspection PhpUnhandledExceptionInspection */
 	UnixPackageManager::updateAllPackages();
 	break;
@@ -193,8 +196,7 @@ switch(@$argv[1])
 		echo "Removing ".$package."...\n";
 		try
 		{
-			(new Package(["name" => $package]))->uninstall();
-			unset($installed_packages[$package]);
+			(new Package(["name" => $package]))->uninstall($installed_packages);
 		}
 		catch(Exception $e)
 		{
