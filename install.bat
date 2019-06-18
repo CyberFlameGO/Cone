@@ -78,7 +78,6 @@ REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\
 
 "%php%" src/cli.php update --post-install
 
-:: Starting a new command prompt Window where PATH & PATHEXT are updated, so the user can get started.
-CD %userprofile%
-START cmd /k "CLS & ECHO Cone is now installed. & cone"
-EXIT
+ECHO Cone is now installed.
+ECHO Get started by opening Command Prompt (as Administrator) and typing "cone help".
+PAUSE > NUL
