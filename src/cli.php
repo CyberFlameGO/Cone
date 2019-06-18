@@ -221,12 +221,12 @@ switch(@$argv[1])
 		Cone::printInstalledPackagesList($installed_packages);
 		echo "Are you sure you want to remove them and Cone?";
 		Cone::confirmStupidDecision();
-		foreach($installed_packages as $package)
+		foreach($installed_packages as $name => $data)
 		{
-			echo "Removing ".$package."...\n";
+			echo "Removing ".$name."...\n";
 			try
 			{
-				(new Package(["name" => $package]))->uninstall();
+				(new Package(["name" => $name]))->uninstall();
 			}
 			catch(Exception $e)
 			{
