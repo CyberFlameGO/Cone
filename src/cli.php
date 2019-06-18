@@ -16,11 +16,23 @@ switch(@$argv[1])
 	echo "Cone v".Cone::VERSION."\nUse 'cone update' to check for updates.\n";
 	break;
 
-	case "ls":
-	case "list":
 	case "installed":
 	case "list-installed":
 	Cone::printInstalledPackagesList();
+	break;
+
+	case "installable":
+	case "list-installable":
+	echo "You can 'cone get' these packages:\n";
+	foreach(Cone::getPackages() as $package)
+	{
+		echo $package->getName().": ".$package->getDisplayName();
+		if($package->hasVersion())
+		{
+			echo " v".$package->getVersion();
+		}
+		echo "\n";
+	}
 	break;
 
 	case "i":
@@ -247,5 +259,5 @@ switch(@$argv[1])
 	break;
 
 	default:
-	echo "Syntax: cone [info|list|update|get <packages ...>|remove <packages ...>|self-uninstall]\n";
+	echo "Syntax: cone [info|update|get <packages ...>|installable|installed|remove <packages ...>|self-uninstall]\n";
 }

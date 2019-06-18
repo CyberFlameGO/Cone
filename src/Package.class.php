@@ -66,6 +66,16 @@ class Package
 		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
 	}
 
+	function hasVersion()
+	{
+		return array_key_exists("version", $this->data);
+	}
+
+	function getVersion()
+	{
+		return @$this->data["version"];
+	}
+
 	protected function platformSwitch($step, $callback)
 	{
 		if(Cone::isWindows())
@@ -292,7 +302,7 @@ class Package
 			"manual" => ($dependency_of === null)
 		];
 		echo $installed_packages[$this->getName()]["display_name"];
-		if(array_key_exists("version", $this->data))
+		if($this->hasVersion())
 		{
 			echo " v".$this->data["version"];
 			$installed_packages[$this->getName()]["version"] = $this->data["version"];
@@ -434,7 +444,7 @@ class Package
 		{
 			$this->performSteps($this->data["update"]);
 		}
-		else if(array_key_exists("version", $this->data) && version_compare($this->data["version"], $this->getInstallData()["version"], ">"))
+		else if($this->hasVersion() && version_compare($this->data["version"], $this->getInstallData()["version"], ">"))
 		{
 			echo "Updating ".$this->getDisplayName()."...\n";
 			$this->uninstall($installed_packages);
