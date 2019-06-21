@@ -150,7 +150,7 @@ class Package
 					break;
 
 				case "shell_exec":
-					shell_exec($step["value"]);
+					passthru($step["value"]);
 					break;
 
 				case "enable_php_extension":
