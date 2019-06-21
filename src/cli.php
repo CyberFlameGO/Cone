@@ -29,7 +29,13 @@ switch(@$argv[1])
 		echo $package->getName().": ".$package->getDisplayName();
 		if($package->hasVersion())
 		{
-			echo " v".$package->getVersion();
+			echo " ";
+			$version = $package->getVersion();
+			if(strpos($version, "dev") === false)
+			{
+				echo "v";
+			}
+			echo $version;
 		}
 		echo "\n";
 	}

@@ -3,7 +3,7 @@ namespace Cone;
 use Exception;
 final class Cone
 {
-	const VERSION = "0.8.0";
+	const VERSION = "0.8.1";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
 	/**
@@ -221,7 +221,12 @@ final class Cone
 			echo array_key_exists("display_name", $data) ? $data["display_name"] : $name;
 			if(array_key_exists("version", $data))
 			{
-				echo " v".$data["version"];
+				echo " ";
+				if(strpos($data["version"], "dev") === false)
+				{
+					echo "v";
+				}
+				echo $data["version"];
 			}
 			echo "\n";
 		}

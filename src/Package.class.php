@@ -304,7 +304,12 @@ class Package
 		echo $installed_packages[$this->getName()]["display_name"];
 		if($this->hasVersion())
 		{
-			echo " v".$this->data["version"];
+			echo " ";
+			if(strpos($this->data["version"], "dev") === false)
+			{
+				echo "v";
+			}
+			echo $this->data["version"];
 			$installed_packages[$this->getName()]["version"] = $this->data["version"];
 		}
 		echo "...\n";
@@ -444,7 +449,7 @@ class Package
 		{
 			$this->performSteps($this->data["update"]);
 		}
-		else if($this->hasVersion() && version_compare($this->data["version"], $this->getInstallData()["version"], ">"))
+		else if($this->hasVersion() && (strpos($this->data["version"], "dev") !== false || version_compare($this->data["version"], $this->getInstallData()["version"], ">")))
 		{
 			echo "Updating ".$this->getDisplayName()."...\n";
 			$this->uninstall($installed_packages);
