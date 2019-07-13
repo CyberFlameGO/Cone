@@ -51,6 +51,9 @@ class Package
 		return array_key_exists("dependencies", $this->data) ? $this->data["dependencies"] : [];
 	}
 
+	/**
+	 * @return Package[]
+	 */
 	function getDependencies()
 	{
 		$dependencies = [];
@@ -258,11 +261,12 @@ class Package
 
 	/**
 	 * @param array|null $installed_packages
+	 * @param bool $force
 	 * @param array $env_arr
 	 * @param bool $as_dependency
 	 * @throws Exception
 	 */
-	function install(&$installed_packages = null, &$env_arr = [], $as_dependency = false)
+	function install(&$installed_packages = null, $force = false, &$env_arr = [], $as_dependency = false)
 	{
 		$in_flow = $installed_packages !== null;
 		if(!$in_flow)
@@ -273,7 +277,7 @@ class Package
 		{
 			return;
 		}
-		if(array_key_exists("prerequisites", $this->data))
+		if(!$force && array_key_exists("prerequisites", $this->data))
 		{
 			foreach($this->data["prerequisites"] as $prerequisite)
 			{
@@ -282,7 +286,10 @@ class Package
 					case "command_not_found":
 						if(Cone::which($prerequisite["value"]) != "")
 						{
-							echo "Not installing ".$this->getDisplayName()." because ".$prerequisite["value"]." is a registered command.\n";
+							if(!$as_dependency)
+							{
+								echo "Not installing ".$this->getDisplayName()." because '".$prerequisite["value"]."' is a registered command.\n";
+							}
 							return;
 						}
 						break;
@@ -296,7 +303,7 @@ class Package
 		{
 			foreach($this->getDependencies() as $dependency)
 			{
-				$dependency->install($installed_packages, $env_arr, $this->getDisplayName());
+				$dependency->install($installed_packages, false, $env_arr, $this->getDisplayName());
 			}
 		}
 		echo "Installing ";

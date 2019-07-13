@@ -60,9 +60,26 @@ switch(@$argv[1])
 	}
 	$installed_packages = Cone::getInstalledPackagesList();
 	$packages = [];
+	$force = false;
+	for($i = 2; $i < count($argv); $i++)
+	{
+		if(in_array(strtolower($argv[$i]), ['--force', '-f']))
+		{
+			if($force)
+			{
+				echo "Double-force activated!\n";
+			}
+			$force = true;
+			continue;
+		}
+	}
 	for($i = 2; $i < count($argv); $i++)
 	{
 		$name = strtolower($argv[$i]);
+		if($force && in_array($name, ['--force', '-f']))
+		{
+			continue;
+		}
 		$package = Cone::getPackage($name, true);
 		if($package === NULL)
 		{
@@ -89,7 +106,7 @@ switch(@$argv[1])
 	{
 		try
 		{
-			$package->install($installed_packages, $env_arr);
+			$package->install($installed_packages, $force, $env_arr);
 		}
 		catch(Exception $e)
 		{
@@ -273,5 +290,5 @@ switch(@$argv[1])
 	break;
 
 	default:
-	echo "Syntax: cone [info|update|get ...|installable|installed|remove ...|self-uninstall]\n";
+	echo "Syntax: cone [info|update|get ... [--force]|installable|installed|remove ...|self-uninstall]\n";
 }
