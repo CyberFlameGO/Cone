@@ -23,27 +23,25 @@ class UnixPackageManager
 	}
 
 	/**
-	 * @return mixed|string
-	 * @throws Exception
+	 * @return string
 	 */
 	static function getNativePackageManager()
 	{
-		if(Cone::isWindows())
-		{
-			return "";
-		}
 		if(self::$native_package_manager !== null)
 		{
 			return self::$native_package_manager;
 		}
-		foreach(self::getSupportedPackageManagers() as $mgr)
+		if(!Cone::isWindows())
 		{
-			if(Cone::which($mgr))
+			foreach(self::getSupportedPackageManagers() as $mgr)
 			{
-				return (self::$native_package_manager = $mgr);
+				if(Cone::which($mgr))
+				{
+					return (self::$native_package_manager = $mgr);
+				}
 			}
 		}
-		throw new Exception("Unable to find native package manager");
+		return (self::$native_package_manager = "");
 	}
 
 	static function getSupportedPackageManagers()

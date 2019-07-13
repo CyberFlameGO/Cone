@@ -188,7 +188,15 @@ switch(@$argv[1])
 		Cone::removeUnneededDependencies($installed_packages);
 		Cone::setInstalledPackagesList($installed_packages);
 		/** @noinspection PhpUnhandledExceptionInspection */
-		UnixPackageManager::updateAllPackages();
+		if($native = UnixPackageManager::getNativePackageManager())
+		{
+			echo "Would you like to perform an update with {$native} as well?";
+			if(Cone::yesOrNo())
+			{
+				/** @noinspection PhpUnhandledExceptionInspection */
+				UnixPackageManager::updateAllPackages();
+			}
+		}
 		break;
 	case "force-self-update":
 		if(!Cone::isAdmin())
