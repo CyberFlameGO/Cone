@@ -267,5 +267,5 @@ switch(@$argv[1])
 	break;
 
 	default:
-	echo "Syntax: cone [info|update|get <packages ...>|installable|installed|remove <packages ...>|self-uninstall]\n";
+	echo "Syntax: cone [info|update|get ...|installable|installed|remove ...|self-uninstall]\n";
 }
