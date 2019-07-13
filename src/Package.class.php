@@ -257,12 +257,12 @@ class Package
 	}
 
 	/**
-	 * @param $installed_packages
-	 * @param $env_arr
-	 * @param $dependency_of
+	 * @param array|null $installed_packages
+	 * @param array $env_arr
+	 * @param bool $as_dependency
 	 * @throws Exception
 	 */
-	function install(&$installed_packages = null, &$env_arr = [], $dependency_of = null)
+	function install(&$installed_packages = null, &$env_arr = [], $as_dependency = false)
 	{
 		$in_flow = $installed_packages !== null;
 		if(!$in_flow)
@@ -282,7 +282,7 @@ class Package
 					case "command_not_found":
 						if(Cone::which($prerequisite["value"]) != "")
 						{
-							echo "Not installing ".$this->getDisplayName()." as ".$prerequisite["value"]." is a registered command.\n";
+							echo "Not installing ".$this->getDisplayName()." because ".$prerequisite["value"]." is a registered command.\n";
 							return;
 						}
 						break;
@@ -292,14 +292,17 @@ class Package
 				}
 			}
 		}
-		echo "Installing ";
-		if($dependency_of !== null)
+		if(array_key_exists("dependencies", $this->data))
 		{
-			echo $dependency_of." dependency ";
+			foreach($this->getDependencies() as $dependency)
+			{
+				$dependency->install($installed_packages, $env_arr, $this->getDisplayName());
+			}
 		}
+		echo "Installing ";
 		$installed_packages[$this->getName()] = [
 			"display_name" => $this->getDisplayName($installed_packages),
-			"manual" => ($dependency_of === null)
+			"manual" => !$as_dependency
 		];
 		echo $installed_packages[$this->getName()]["display_name"];
 		if($this->hasVersion())
@@ -313,14 +316,6 @@ class Package
 			$installed_packages[$this->getName()]["version"] = $this->data["version"];
 		}
 		echo "...\n";
-		if(array_key_exists("dependencies", $this->data))
-		{
-			foreach($this->getDependencies() as $dependency)
-			{
-				$dependency->install($installed_packages, $env_arr, $this->getDisplayName());
-			}
-			echo "All ".$this->getDisplayName()." dependencies are installed.\n";
-		}
 		if(!is_dir(__DIR__."/../packages/"))
 		{
 			mkdir(__DIR__."/../packages/");
