@@ -436,6 +436,7 @@ class Package
 	}
 
 	/**
+	 * @param array|null $installed_packages
 	 * @throws Exception
 	 */
 	function update(&$installed_packages = null)
@@ -463,6 +464,7 @@ class Package
 	}
 
 	/**
+	 * @param array|null $installed_packages
 	 * @throws Exception
 	 */
 	function uninstall(&$installed_packages = null)
