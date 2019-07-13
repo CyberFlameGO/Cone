@@ -174,8 +174,7 @@ final class Cone
 		}
 		foreach($packages as $name => $data)
 		{
-			/** @deprecated Fallback if display_name is not set for packages installed before 0.6.1 */
-			echo array_key_exists("display_name", $data) ? $data["display_name"] : $name;
+			echo $data["display_name"];
 			if(array_key_exists("version", $data))
 			{
 				echo " ";
@@ -240,8 +239,7 @@ final class Cone
 				}
 				if(!$needed)
 				{
-					/** @deprecated Fallback if display_name is not set for packages installed before 0.6.1 */
-					echo "Removing unneeded dependency ".(array_key_exists("display_name", $data) ? $data["display_name"] : $name)."...\n";
+					echo "Removing unneeded dependency ".$data["display_name"]."...\n";
 					try
 					{
 						$package->uninstall($installed_packages);
