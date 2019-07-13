@@ -1,6 +1,6 @@
 # Cone
 
-An intuitive package manager that works everywhere.
+One intuitive package manager for all operations systems.
 
 ## [[ Download for Windows ]](https://code.getcone.org/install.bat)
 
