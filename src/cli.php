@@ -158,7 +158,7 @@ switch(@$argv[1])
 		die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
 	}
 	echo "Do you know what you're doing?";
-	Cone::confirmStupidDecision();
+	Cone::noOrYes();
 	file_put_contents("_update_", "");
 	break;
 
@@ -238,7 +238,8 @@ switch(@$argv[1])
 		echo "You currently have ";
 		Cone::printInstalledPackagesList($installed_packages);
 		echo "Are you sure you want to remove them and Cone?";
-		Cone::confirmStupidDecision();
+		Cone::noOrYes();
+		Cone::timeToContemplate();
 		foreach($installed_packages as $name => $data)
 		{
 			echo "Removing ".$name."...\n";
@@ -255,7 +256,8 @@ switch(@$argv[1])
 	else
 	{
 		echo "Are you sure you want to remove Cone from your system?";
-		Cone::confirmStupidDecision();
+		Cone::noOrYes();
+		Cone::timeToContemplate();
 	}
 	if(Cone::isWindows())
 	{

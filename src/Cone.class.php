@@ -299,7 +299,7 @@ final class Cone
 		}
 	}
 
-	static function confirmStupidDecision()
+	static function noOrYes()
 	{
 		echo " [y/N] ";
 		$stdin = fopen("php://stdin", "r");
@@ -308,6 +308,10 @@ final class Cone
 			die("Aborting.\n");
 		}
 		fclose($stdin);
+	}
+
+	static function timeToContemplate()
+	{
 		echo "3...";
 		sleep(1);
 		echo " 2...";
