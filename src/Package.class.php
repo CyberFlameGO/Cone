@@ -209,7 +209,7 @@ class Package
 					break;
 
 				case "download":
-					Cone::download($step["url"], $step["target"]);
+					Cone::download(str_replace("{version}", $this->getVersion(), $step["url"]), $step["target"]);
 					if(array_key_exists("hash", $step))
 					{
 						foreach($step["hash"] as $algo => $hash)
@@ -240,16 +240,17 @@ class Package
 					break;
 
 				case "keep":
-					if(!file_exists($step["file"]))
+					$file = str_replace("{version}", $this->getVersion(), $step["file"]);
+					if(!file_exists($file))
 					{
-						throw new Exception($step["file"]." can't be kept as it doesn't exist");
+						throw new Exception($file." can't be kept as it doesn't exist");
 					}
 					$dir = __DIR__."/../packages/".$this->getName()."/";
-					if(!is_dir($dir) && $step["as"] != "")
+					if(!empty($step["as"]) && !is_dir($dir))
 					{
 						mkdir($dir);
 					}
-					rename($step["file"], $dir.$step["as"]);
+					rename($file, $dir.$step["as"]);
 					break;
 
 				default:
