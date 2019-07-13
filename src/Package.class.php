@@ -3,14 +3,25 @@ namespace Cone;
 use Exception;
 class Package
 {
+	/**
+	 * @var array $data
+	 */
 	private $data;
 
 	/**
-	 * @param $data array
+	 * @param array $data
 	 */
 	function __construct($data)
 	{
 		$this->data = $data;
+	}
+
+	/**
+	 * @return array
+	 */
+	function getData()
+	{
+		return $this->data;
 	}
 
 	function isManuallyInstalled(&$installed_packages = null)
@@ -26,6 +37,11 @@ class Package
 	function getName()
 	{
 		return $this->data["name"];
+	}
+
+	function getSource()
+	{
+		return $this->data["source"];
 	}
 
 	function getAliases()
@@ -62,7 +78,7 @@ class Package
 		if(!$in_flow)
 		{
 			Cone::removeUnneededDependencies($installed_packages);
-			Cone::setInstalledPackagesList($installed_packages);
+			Cone::setInstalledPackages($installed_packages);
 		}
 	}
 
@@ -320,7 +336,7 @@ class Package
 		unset($installed_packages[$this->getName()]);
 		if(!$in_flow)
 		{
-			Cone::setInstalledPackagesList($installed_packages);
+			Cone::setInstalledPackages($installed_packages);
 		}
 	}
 
@@ -497,7 +513,7 @@ class Package
 		}
 		if(!$in_flow)
 		{
-			Cone::setInstalledPackagesList($installed_packages);
+			Cone::setInstalledPackages($installed_packages);
 		}
 	}
 

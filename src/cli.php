@@ -1,4 +1,5 @@
 <?php
+/** @noinspection HtmlDeprecatedTag */
 chdir(realpath(__DIR__."/.."));
 require "src/Cone.class.php";
 require "src/Package.class.php";
@@ -19,7 +20,7 @@ switch(@$argv[1])
 	case "list":
 	case "installed":
 	case "list-installed":
-		Cone::printInstalledPackagesList();
+		Cone::printInstalledPackages();
 		echo "Use 'cone installable' for a list of installable packages.\n";
 		break;
 	case "installable":
@@ -52,7 +53,7 @@ switch(@$argv[1])
 		}
 		if(empty($argv[2]))
 		{
-			die("Syntax: cone install <packages ...>\n");
+			die("Syntax: cone install <packages ...> [--force]\n");
 		}
 		if(in_array($argv[2], [
 			"gud",
@@ -136,7 +137,7 @@ switch(@$argv[1])
 		}
 		$count = (count($installed_packages) - $before);
 		echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
-		Cone::setInstalledPackagesList($installed_packages);
+		Cone::setInstalledPackages($installed_packages);
 		if($env_arr)
 		{
 			echo "In order to use the environment variable".(count($env_arr) == 1 ? " that was" : "s that were")." just defined (".join(", ", $env_arr)."), open a new terminal window.\n";
@@ -151,7 +152,7 @@ switch(@$argv[1])
 		}
 		if(@$argv[2] == "--post-install")
 		{
-			echo "Downloading package list...";
+			echo "Downloading package list...\n";
 		}
 		else
 		{
@@ -162,32 +163,57 @@ switch(@$argv[1])
 				file_put_contents("_update_", "");
 				exit;
 			}
-			echo "Cone is up-to-date.\nUpdating package list...";
+			echo "Cone is up-to-date.\nUpdating package lists...\n";
 		}
 		$packages = [];
 		$_packages = Cone::getPackages();
-		foreach(Cone::getRemotePackageLists() as $list)
+		foreach(Cone::getSources() as $url => $name)
 		{
-			$packages = array_merge($packages, json_decode(file_get_contents($list), true));
+			echo "Fetching {$name}... ";
+			$res = json_decode(@file_get_contents($url), true);
+			if($error = Cone::validateSourceData($res))
+			{
+				echo $error."\n";
+				$res = null;
+			}
+			if($res === null)
+			{
+				foreach($_packages as $package)
+				{
+					if($package->getSource() == $url)
+					{
+						array_push($packages, $package->getData());
+					}
+				}
+				break;
+			}
+			foreach($res["packages"] as $package)
+			{
+				array_push($packages, ["source" => $url] + $package);
+			}
+			echo "got ".count($res["packages"])." packages.\n";
 		}
-		file_put_contents(Cone::PACKAGES_FILE, json_encode($packages));
-		echo " Done.\n";
+		Cone::setPackages($packages);
+		echo "Updating installed packages...\n";
 		$installed_packages = Cone::getInstalledPackagesList();
 		foreach($installed_packages as $name => $data)
 		{
 			try
 			{
-				Cone::getPackage($name)
-					->update($installed_packages);
+				$package = Cone::getPackage($name);
+				if($package !== null)
+				{
+					$package->update($installed_packages);
+				}
 			}
 			catch(Exception $e)
 			{
 				echo $e->getMessage()."\n".$e->getTraceAsString()."\n";
 			}
 		}
+		echo "Finishing up...\n";
 		Cone::removeUnneededDependencies($installed_packages);
-		Cone::setInstalledPackagesList($installed_packages);
-		/** @noinspection PhpUnhandledExceptionInspection */
+		Cone::setInstalledPackages($installed_packages);
 		if($native = UnixPackageManager::getNativePackageManager())
 		{
 			echo "Would you like to perform an update with {$native} as well?";
@@ -227,7 +253,7 @@ switch(@$argv[1])
 			$name = strtolower($argv[$i]);
 			if($name == "cone")
 			{
-				die("If you're looking to uninstall Cone, use `cone self-uninstall`.\n");
+				die("If you're looking to uninstall Cone, use 'cone self-uninstall'.\n");
 			}
 			if(!array_key_exists($name, $installed_packages))
 			{
@@ -272,7 +298,80 @@ switch(@$argv[1])
 		Cone::removeUnneededDependencies($installed_packages);
 		$count = ($before - count($installed_packages));
 		echo "Removed ".$count." package".($count == 1 ? "" : "s").".\n";
-		Cone::setInstalledPackagesList($installed_packages);
+		Cone::setInstalledPackages($installed_packages);
+		break;
+	case "sources":
+	case "list-sources":
+		$sources = Cone::getSources();
+		foreach($sources as $url => $name)
+		{
+			echo "$name\t$url\n";
+		}
+		break;
+	case "add-source":
+		if(!Cone::isAdmin())
+		{
+			die("Cone needs to run as ".Cone::rootOrAdmin()." to manage package sources.\n");
+		}
+		if(empty($argv[2]))
+		{
+			die("Syntax: cone add-source <URL>\n");
+		}
+		$sources = Cone::getSources();
+		foreach($sources as $url => $name)
+		{
+			if(strtolower($url) == strtolower($argv[2]))
+			{
+				die("That's already one of Cone's package sources.\n");
+			}
+		}
+		echo "Fetching... ";
+		$res = @file_get_contents($argv[2]);
+		if(!$res)
+		{
+			die("There doesn't seem to be anything at that URL.\n");
+		}
+		$res = json_decode($res, true);
+		if($res === null)
+		{
+			die("That file doesn't contain valid JSON.\n");
+		}
+		if($error = Cone::validateSourceData($res))
+		{
+			die($error."\n");
+		}
+		$sources[$argv[2]] = $res["name"];
+		Cone::setSources($sources);
+		echo "Successfully added ".$res["name"].".\nUse 'cone update' once you're finished managing package sources.\n";
+		break;
+	case "del-source":
+	case "remove-source":
+		if(!Cone::isAdmin())
+		{
+			die("Cone needs to run as ".Cone::rootOrAdmin()." to manage package sources.\n");
+		}
+		if(empty($argv[2]))
+		{
+			die("Syntax: cone remove-source <URL>\n");
+		}
+		$sources = Cone::getSources();
+		if(!array_key_exists($argv[2], $sources))
+		{
+			die("Package source unknown. Keep in mind that you have to use the URL. Use 'cone sources' for a list.\n");
+		}
+		if($argv[2] == "https://packages.getcone.org/main.json")
+		{
+			echo "Do you know what you're doing?";
+			if(!Cone::noOrYes())
+			{
+				die("Aborting.\n");
+			}
+			Cone::timeToContemplate();
+		}
+		$name = $sources[$argv[2]];
+		unset($sources[$argv[2]]);
+		Cone::setSources($sources);
+		echo "Successfully removed {$name}.\nUse 'cone update' once you're finished managing package sources.\n";
 		break;
 	case "self-uninstall":
 		if(!Cone::isAdmin())
@@ -283,7 +382,7 @@ switch(@$argv[1])
 		if(count($installed_packages) > 0)
 		{
 			echo "You currently have ";
-			Cone::printInstalledPackagesList($installed_packages);
+			Cone::printInstalledPackages($installed_packages);
 			echo "Are you sure you want to remove them and Cone?";
 			if(!Cone::noOrYes())
 			{
@@ -319,5 +418,27 @@ switch(@$argv[1])
 		file_put_contents("_uninstall_", "");
 		break;
 	default:
-		echo "Syntax: cone [info|update|get ... [--force]|list|installable|remove ...|self-uninstall]\n";
+		echo <<<EOS
+Syntax: cone <command [args]>
+
+These are available Cone commands used in various situations:
+
+get information about Cone and installed packages:
+   info               Displays version information
+   list               Lists installed packages
+   installable        Lists installable packages
+
+manage Cone and installed packages:
+   update             Updates Cone and installed packages
+   get ... [--force]  Installs the given package(s), optionally forcefully/non-interactively
+   remove ...         Uninstalls the given package(s)
+   self-uninstall     Removes Cone and installed packages from your system
+   force-self-update  Forces an update which can be useful if you've edited Cone's files
+
+manage package sources:
+   sources            Lists all sources
+   add-source ...     Adds a source by its URL
+   remove-source ...  Remove a source by its URL
+
+EOS;
 }

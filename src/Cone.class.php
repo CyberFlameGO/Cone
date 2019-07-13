@@ -4,8 +4,13 @@ use Exception;
 final class Cone
 {
 	const VERSION = "0.8.1";
+	const SOURCES_FILE = __DIR__."/../sources.json";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
+	/**
+	 * @var $packages_cache string[]
+	 */
+	private static $sources_cache;
 	/**
 	 * @var $packages_cache Package[]
 	 */
@@ -133,13 +138,54 @@ final class Cone
 		return self::isWindows() ? getenv("tmp") : "/tmp/";
 	}
 
-	static function getRemotePackageLists()
+	static function getSources()
 	{
-		// TODO: Allow adding and removing from this list
-		return ["https://packages.getcone.org/main.json"];
+		if(self::$sources_cache === null)
+		{
+			if(is_file(self::SOURCES_FILE))
+			{
+				self::$sources_cache = json_decode(file_get_contents(self::SOURCES_FILE), true);
+			}
+			else
+			{
+				self::setSources(["https://packages.getcone.org/main.json" => "Cone Main Repository"]);
+			}
+		}
+		return self::$sources_cache;
 	}
 
-	static function printInstalledPackagesList(&$installed_packages = null)
+	/**
+	 * @param array $sources
+	 */
+	static function setSources($sources)
+	{
+		self::$sources_cache = $sources;
+		file_put_contents(self::SOURCES_FILE, json_encode($sources, JSON_UNESCAPED_SLASHES));
+	}
+
+	static function validateSourceData($data)
+	{
+		if(empty($data["name"]) || empty($data["packages"]))
+		{
+			return "Invalid package source file.";
+		}
+		if(array_key_exists("cone_min", $data) && version_compare($data["cone_min"], self::VERSION, ">"))
+		{
+			return "This package list was made for Cone ".$data["cone_min"]." and above.";
+		}
+		return "";
+	}
+
+	/**
+	 * @param $packages
+	 */
+	static function setPackages($packages)
+	{
+		self::$packages_cache = null;
+		file_put_contents(self::PACKAGES_FILE, json_encode($packages, JSON_UNESCAPED_SLASHES));
+	}
+
+	static function printInstalledPackages(&$installed_packages = null)
 	{
 		if($installed_packages === null)
 		{
@@ -224,7 +270,7 @@ final class Cone
 		}
 		foreach($installed_packages as $name => $data)
 		{
-			$package = Cone::getPackage($name);
+			$package = new Package(["name" => $name]);
 			if(!$package->isManuallyInstalled($installed_packages))
 			{
 				$needed = false;
@@ -253,7 +299,7 @@ final class Cone
 		}
 		if(!$in_flow)
 		{
-			Cone::setInstalledPackagesList($installed_packages);
+			Cone::setInstalledPackages($installed_packages);
 		}
 	}
 
@@ -305,10 +351,13 @@ final class Cone
 		return self::$packages_cache;
 	}
 
-	static function setInstalledPackagesList($installed_packages)
+	/**
+	 * @param array $installed_packages
+	 */
+	static function setInstalledPackages($installed_packages)
 	{
 		self::$installed_packages_cache = $installed_packages;
-		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages));
+		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages, JSON_UNESCAPED_SLASHES));
 	}
 
 	static function yesOrNo()

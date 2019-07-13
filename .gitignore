@@ -3,3 +3,4 @@ packages/
 path/
 installed_packages.json
 packages.json
+sources.json
