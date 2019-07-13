@@ -13,7 +13,7 @@ switch(@$argv[1])
 	case "version":
 	case "-version":
 	case "--version":
-		echo "Cone v".Cone::VERSION."\nUse 'cone update' to check for updates.\n";
+		echo "Cone ".Cone::VERSION." running on PHP ".PHP_VERSION.".\nUse 'cone update' to check for updates.\n";
 		break;
 	case "ls":
 	case "list":
