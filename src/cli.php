@@ -16,9 +16,12 @@ switch(@$argv[1])
 	echo "Cone v".Cone::VERSION."\nUse 'cone update' to check for updates.\n";
 	break;
 
+	case "ls":
+	case "list":
 	case "installed":
 	case "list-installed":
 	Cone::printInstalledPackagesList();
+	echo "Use 'cone installable' for a list of installable packages.\n";
 	break;
 
 	case "installable":
@@ -290,5 +293,5 @@ switch(@$argv[1])
 	break;
 
 	default:
-	echo "Syntax: cone [info|update|get ... [--force]|installable|installed|remove ...|self-uninstall]\n";
+	echo "Syntax: cone [info|update|get ... [--force]|list|installable|remove ...|self-uninstall]\n";
 }
