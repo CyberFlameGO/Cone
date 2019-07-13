@@ -10,17 +10,7 @@ final class Cone
 	 * @var $packages_cache Package[]
 	 */
 	private static $packages_cache;
-	private static $installed_packages_list_cache;
-
-	static function isWindows()
-	{
-		return defined("PHP_WINDOWS_VERSION_MAJOR");
-	}
-
-	static function isUnix()
-	{
-		return !self::isWindows();
-	}
+	private static $installed_packages_cache;
 
 	static function isMacOS()
 	{
@@ -37,6 +27,11 @@ final class Cone
 		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
 	}
 
+	static function isWindows()
+	{
+		return defined("PHP_WINDOWS_VERSION_MAJOR");
+	}
+
 	static function rootOrAdmin()
 	{
 		return self::isWindows() ? "administrator" : "root";
@@ -45,21 +40,6 @@ final class Cone
 	static function getPathFolder()
 	{
 		return self::isWindows() ? __DIR__."/../path/" : "/usr/bin/";
-	}
-
-	static function getTmpFolder()
-	{
-		return self::isWindows() ? getenv("tmp") : "/tmp/";
-	}
-
-	static function which($name)
-	{
-		return trim(shell_exec(self::isWindows() ? "WHERE ".$name." 2>NUL" : "which ".$name));
-	}
-
-	static function getPhpDir()
-	{
-		return dirname(self::which("php"));
 	}
 
 	static function getPhpIni()
@@ -72,6 +52,16 @@ final class Cone
 		$dir = self::getPhpDir();
 		copy($dir."/php.ini-development", $dir."/php.ini");
 		return $dir."/php.ini";
+	}
+
+	static function getPhpDir()
+	{
+		return dirname(self::which("php"));
+	}
+
+	static function which($name)
+	{
+		return trim(shell_exec(self::isWindows() ? "WHERE ".$name." 2>NUL" : "which ".$name));
 	}
 
 	static function reallyDelete($path)
@@ -92,7 +82,10 @@ final class Cone
 		{
 			foreach(scandir($path) as $file)
 			{
-				if(!in_array($file, [".", ".."]))
+				if(!in_array($file, [
+					".",
+					".."
+				]))
 				{
 					self::reallyDelete($path."/".$file);
 				}
@@ -103,6 +96,11 @@ final class Cone
 		{
 			unlink($path);
 		}
+	}
+
+	static function isUnix()
+	{
+		return !self::isWindows();
 	}
 
 	static function download($url, $output)
@@ -130,71 +128,15 @@ final class Cone
 		}
 	}
 
+	static function getTmpFolder()
+	{
+		return self::isWindows() ? getenv("tmp") : "/tmp/";
+	}
+
 	static function getRemotePackageLists()
 	{
 		// TODO: Allow adding and removing from this list
 		return ["https://packages.getcone.org/main.json"];
-	}
-
-    /**
-     * @return Package[]
-     */
-	static function getPackages()
-	{
-		if(self::$packages_cache === NULL)
-		{
-			self::$packages_cache = [];
-			foreach(json_decode(file_get_contents(self::PACKAGES_FILE), true) as $raw_package)
-			{
-				array_push(self::$packages_cache, new Package($raw_package));
-			}
-		}
-		return self::$packages_cache;
-	}
-
-	static function getPackage($name, $include_aliases = false, $include_risky_aliases = true)
-	{
-	    foreach(self::getPackages() as $package)
-        {
-            if($package->getName() == $name)
-            {
-                return $package;
-            }
-        }
-	    if($include_aliases)
-	    {
-            foreach(self::$packages_cache as $package)
-            {
-                if(in_array($name, $package->getAliases()))
-                {
-                    return $package;
-                }
-            }
-			if($include_risky_aliases)
-			{
-				foreach(self::$packages_cache as $package)
-				{
-					if(in_array($name, $package->getRiskyAliases()))
-					{
-						return $package;
-					}
-				}
-			}
-        }
-		return null;
-	}
-
-	static function getInstalledPackagesList(&$installed_packages = null)
-	{
-		if($installed_packages !== null)
-		{
-			return $installed_packages;
-		}
-		if(self::$installed_packages_list_cache === NULL)
-		{
-			self::$installed_packages_list_cache = is_file(self::INSTALLED_PACKAGES_FILE) ? json_decode(file_get_contents(self::INSTALLED_PACKAGES_FILE), true) : [];
-		}
-		return self::$installed_packages_list_cache;
 	}
 
 	static function printInstalledPackagesList(&$installed_packages = null)
@@ -261,10 +203,17 @@ final class Cone
 		}
 	}
 
-	static function setInstalledPackagesList($installed_packages)
+	static function getInstalledPackagesList(&$installed_packages = null)
 	{
-		self::$installed_packages_list_cache = $installed_packages;
-		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages));
+		if($installed_packages !== null)
+		{
+			return $installed_packages;
+		}
+		if(self::$installed_packages_cache === null)
+		{
+			self::$installed_packages_cache = is_file(self::INSTALLED_PACKAGES_FILE) ? json_decode(file_get_contents(self::INSTALLED_PACKAGES_FILE), true) : [];
+		}
+		return self::$installed_packages_cache;
 	}
 
 	static function removeUnneededDependencies(&$installed_packages = null)
@@ -282,7 +231,8 @@ final class Cone
 				$needed = false;
 				foreach($installed_packages as $name_ => $data_)
 				{
-					if(in_array($name, Cone::getPackage($name_)->getDependenciesList()))
+					if(in_array($name, Cone::getPackage($name_)
+										   ->getDependenciesList()))
 					{
 						$needed = true;
 						break;
@@ -307,6 +257,60 @@ final class Cone
 		{
 			Cone::setInstalledPackagesList($installed_packages);
 		}
+	}
+
+	static function getPackage($name, $include_aliases = false, $include_risky_aliases = true)
+	{
+		foreach(self::getPackages() as $package)
+		{
+			if($package->getName() == $name)
+			{
+				return $package;
+			}
+		}
+		if($include_aliases)
+		{
+			foreach(self::$packages_cache as $package)
+			{
+				if(in_array($name, $package->getAliases()))
+				{
+					return $package;
+				}
+			}
+			if($include_risky_aliases)
+			{
+				foreach(self::$packages_cache as $package)
+				{
+					if(in_array($name, $package->getRiskyAliases()))
+					{
+						return $package;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @return Package[]
+	 */
+	static function getPackages()
+	{
+		if(self::$packages_cache === null)
+		{
+			self::$packages_cache = [];
+			foreach(json_decode(file_get_contents(self::PACKAGES_FILE), true) as $raw_package)
+			{
+				array_push(self::$packages_cache, new Package($raw_package));
+			}
+		}
+		return self::$packages_cache;
+	}
+
+	static function setInstalledPackagesList($installed_packages)
+	{
+		self::$installed_packages_cache = $installed_packages;
+		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages));
 	}
 
 	static function yesOrNo()

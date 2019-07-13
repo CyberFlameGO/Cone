@@ -5,9 +5,21 @@ class UnixPackageManager
 {
 	private static $native_package_manager;
 
-	static function getSupportedPackageManagers()
+	/**
+	 * @param $package
+	 * @throws Exception
+	 */
+	static function installPackage($package)
 	{
-		return ["aptitude", "apt-get", "pacman"];
+		switch($mgr = self::getNativePackageManager())
+		{
+			case "aptitude":
+			case "apt-get":
+				passthru("{$mgr} -y install {$package}");
+				break;
+			case "pacman":
+				passthru("pacman --noconfirm -S {$package}");
+		}
 	}
 
 	/**
@@ -34,22 +46,13 @@ class UnixPackageManager
 		throw new Exception("Unable to find native package manager");
 	}
 
-	/**
-	 * @param $package
-	 * @throws Exception
-	 */
-	static function installPackage($package)
+	static function getSupportedPackageManagers()
 	{
-		switch($mgr = self::getNativePackageManager())
-		{
-			case "aptitude":
-			case "apt-get":
-			passthru("{$mgr} -y install {$package}");
-			break;
-
-			case "pacman":
-			passthru("pacman --noconfirm -S {$package}");
-		}
+		return [
+			"aptitude",
+			"apt-get",
+			"pacman"
+		];
 	}
 
 	/**
@@ -61,11 +64,10 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-			passthru("{$mgr} -y update && {$mgr} -y upgrade");
-			break;
-
+				passthru("{$mgr} -y update && {$mgr} -y upgrade");
+				break;
 			case "pacman":
-			passthru("pacman --noconfirm -Syu");
+				passthru("pacman --noconfirm -Syu");
 		}
 	}
 
@@ -79,11 +81,10 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-			passthru("{$mgr} -y remove {$package}");
-			break;
-
+				passthru("{$mgr} -y remove {$package}");
+				break;
 			case "pacman":
-			passthru("pacman --noconfirm -Rs {$package}");
+				passthru("pacman --noconfirm -Rs {$package}");
 		}
 	}
 }

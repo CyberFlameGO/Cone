@@ -13,55 +13,19 @@ class Package
 		$this->data = $data;
 	}
 
-	function getName()
-    {
-        return $this->data["name"];
-    }
-
-    function getDisplayName(&$installed_packages = null)
-    {
-        if(array_key_exists("display_name", $this->data))
-        {
-            return $this->data["display_name"];
-        }
-        if($this->isInstalled($installed_packages))
-        {
-            return $this->getInstallData($installed_packages)["display_name"];
-        }
-        return strtoupper(substr($this->getName(), 0, 1)).substr($this->getName(), 1);
-    }
+	function isManuallyInstalled(&$installed_packages = null)
+	{
+		return self::getInstallData($installed_packages)["manual"];
+	}
 
 	function getInstallData(&$installed_packages = null)
 	{
 		return @Cone::getInstalledPackagesList($installed_packages)[$this->getName()];
 	}
 
-    function isInstalled(&$installed_packages = null)
-    {
-        return $this->getInstallData($installed_packages) !== null;
-    }
-
-	function isManuallyInstalled(&$installed_packages = null)
+	function getName()
 	{
-		return self::getInstallData($installed_packages)["manual"];
-	}
-
-	function getDependenciesList()
-	{
-		return array_key_exists("dependencies", $this->data) ? $this->data["dependencies"] : [];
-	}
-
-	/**
-	 * @return Package[]
-	 */
-	function getDependencies()
-	{
-		$dependencies = [];
-		foreach($this->getDependenciesList() as $name)
-		{
-			array_push($dependencies, Cone::getPackage($name));
-		}
-		return $dependencies;
+		return $this->data["name"];
 	}
 
 	function getAliases()
@@ -74,14 +38,157 @@ class Package
 		return array_key_exists("risky_aliases", $this->data) ? $this->data["risky_aliases"] : [];
 	}
 
-	function hasVersion()
+	/**
+	 * @param array|null $installed_packages
+	 * @throws Exception
+	 */
+	function update(&$installed_packages = null)
 	{
-		return array_key_exists("version", $this->data);
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		if(array_key_exists("update", $this->data))
+		{
+			$this->performSteps($this->data["update"]);
+		}
+		else if($this->hasVersion() && (strpos($this->data["version"], "dev") !== false || version_compare($this->data["version"], $this->getInstallData()["version"], ">")))
+		{
+			echo "Updating ".$this->getDisplayName()."...\n";
+			$this->uninstall($installed_packages);
+			$this->install($installed_packages);
+		}
+		if(!$in_flow)
+		{
+			Cone::removeUnneededDependencies($installed_packages);
+			Cone::setInstalledPackagesList($installed_packages);
+		}
 	}
 
-	function getVersion()
+	/**
+	 * @param $steps
+	 * @return array
+	 * @throws Exception
+	 */
+	function performSteps($steps)
 	{
-		return @$this->data["version"];
+		$inverted_actions = [];
+		foreach($steps as $step)
+		{
+			switch($step["type"])
+			{
+				case "platform_switch":
+					$this->platformSwitch($step, function($platform) use ($step)
+					{
+						$this->performSteps($step[$platform]);
+					});
+					break;
+				case "platform_download_and_extract":
+					$this->platformSwitch($step, function($platform) use ($step)
+					{
+						$archive_ext = ($platform == "windows" ? ".zip" : ".tar.gz");
+						$this->performSteps([
+							[
+								"type" => "download",
+								"target" => $step["target"].$archive_ext
+							] + $step[$platform],
+							[
+								"type" => "extract",
+								"file" => $step["target"].$archive_ext,
+								"target" => $step["target"]
+							],
+							[
+								"type" => "delete",
+								"file" => $step["target"].$archive_ext
+							]
+						]);
+					});
+					break;
+				case "shell_exec":
+					passthru($step["value"]);
+					break;
+				case "enable_php_extension":
+					array_push($inverted_actions, ["type" => "disable_php_extension"] + $step);
+					file_put_contents(php_ini_loaded_file(), str_replace([
+						"\n;extension=".$step["name"],
+						"\n;extension=php_".$step["name"].".dll"
+					], [
+						"\nextension=".$step["name"],
+						"\nextension=php_".$step["name"].".dll"
+					], file_get_contents(php_ini_loaded_file())));
+					break;
+				case "disable_php_extension":
+					array_push($inverted_actions, ["type" => "enable_php_extension"] + $step);
+					file_put_contents(php_ini_loaded_file(), str_replace([
+						"\nextension=".$step["name"],
+						"\nextension=php_".$step["name"].".dll"
+					], [
+						"\n;extension=".$step["name"],
+						"\n;extension=php_".$step["name"].".dll"
+					], file_get_contents(php_ini_loaded_file())));
+					break;
+				case "install_unix_package":
+					if(Cone::isUnix())
+					{
+						array_push($inverted_actions, ["type" => "remove_unix_package"] + $step);
+						UnixPackageManager::installPackage($step["name"]);
+					}
+					break;
+				case "remove_unix_package":
+				case "uninstall_unix_package":
+					if(Cone::isUnix())
+					{
+						array_push($inverted_actions, ["type" => "install_unix_package"] + $step);
+						UnixPackageManager::removePackage($step["name"]);
+					}
+					break;
+				case "download":
+					Cone::download(str_replace("{version}", $this->getVersion(), $step["url"]), $step["target"]);
+					if(array_key_exists("hash", $step))
+					{
+						foreach($step["hash"] as $algo => $hash)
+						{
+							if(hash_file($algo, $step["target"]) != $hash)
+							{
+								unlink($step["target"]);
+								throw new Exception($step["target"]." signature mismatch");
+							}
+						}
+					}
+					break;
+				case "extract":
+					if(!is_file($step["file"]))
+					{
+						throw new Exception($step["file"]." can't be extracted as it doesn't exist");
+					}
+					Cone::extract($step["file"], $step["target"]);
+					break;
+				case "delete":
+					if(!file_exists($step["file"]))
+					{
+						throw new Exception($step["file"]." can't be deleted as it doesn't exist.");
+					}
+					Cone::reallyDelete($step["file"]);
+					break;
+				case "keep":
+					$file = str_replace("{version}", $this->getVersion(), $step["file"]);
+					if(!file_exists($file))
+					{
+						throw new Exception($file." can't be kept as it doesn't exist");
+					}
+					$dir = __DIR__."/../packages/".$this->getName()."/";
+					if(!empty($step["as"]) && !is_dir($dir))
+					{
+						mkdir($dir);
+					}
+					rename($file, $dir.$step["as"]);
+					break;
+				default:
+					throw new Exception("Unknown step type: ".$step["type"]);
+			}
+		}
+		return $inverted_actions;
 	}
 
 	protected function platformSwitch($step, $callback)
@@ -116,153 +223,105 @@ class Package
 		}
 	}
 
-    /**
-     * @param $steps
-     * @return array
-     * @throws Exception
-     */
-	function performSteps($steps)
+	function getVersion()
 	{
-		$inverted_actions = [];
-		foreach($steps as $step)
+		return @$this->data["version"];
+	}
+
+	function hasVersion()
+	{
+		return array_key_exists("version", $this->data);
+	}
+
+	function getDisplayName(&$installed_packages = null)
+	{
+		if(array_key_exists("display_name", $this->data))
 		{
-			switch($step["type"])
+			return $this->data["display_name"];
+		}
+		if($this->isInstalled($installed_packages))
+		{
+			return $this->getInstallData($installed_packages)["display_name"];
+		}
+		return strtoupper(substr($this->getName(), 0, 1)).substr($this->getName(), 1);
+	}
+
+	function isInstalled(&$installed_packages = null)
+	{
+		return $this->getInstallData($installed_packages) !== null;
+	}
+
+	/**
+	 * @param array|null $installed_packages
+	 * @throws Exception
+	 */
+	function uninstall(&$installed_packages = null)
+	{
+		$in_flow = $installed_packages !== null;
+		if(!$in_flow)
+		{
+			$installed_packages = Cone::getInstalledPackagesList();
+		}
+		if(!self::isInstalled($installed_packages))
+		{
+			return;
+		}
+		$dir = __DIR__."/../packages/".$this->getName();
+		if(is_dir($dir))
+		{
+			Cone::reallyDelete($dir);
+		}
+		$data = self::getInstallData();
+		if(array_key_exists("shortcuts", $data))
+		{
+			foreach($data["shortcuts"] as $name)
 			{
-				case "platform_switch":
-					$this->platformSwitch($step, function($platform) use ($step)
-					{
-						$this->performSteps($step[$platform]);
-					});
-					break;
-
-				case "platform_download_and_extract":
-					$this->platformSwitch($step, function($platform) use ($step)
-					{
-						$archive_ext = ($platform == "windows" ? ".zip" : ".tar.gz");
-						$this->performSteps([
-							[
-								"type" => "download",
-								"target" => $step["target"].$archive_ext
-							] + $step[$platform],
-							[
-								"type" => "extract",
-								"file" => $step["target"].$archive_ext,
-								"target" => $step["target"]
-							],
-							[
-								"type" => "delete",
-								"file" => $step["target"].$archive_ext
-							]
-						]);
-					});
-					break;
-
-				case "shell_exec":
-					passthru($step["value"]);
-					break;
-
-				case "enable_php_extension":
-					array_push($inverted_actions, ["type" => "disable_php_extension"] + $step);
-					file_put_contents(
-						php_ini_loaded_file(),
-						str_replace(
-							[
-								"\n;extension=".$step["name"],
-								"\n;extension=php_".$step["name"].".dll"
-							], [
-								"\nextension=".$step["name"],
-								"\nextension=php_".$step["name"].".dll"
-							],
-							file_get_contents(php_ini_loaded_file())
-						)
-					);
-					break;
-
-				case "disable_php_extension":
-					array_push($inverted_actions, ["type" => "enable_php_extension"] + $step);
-					file_put_contents(
-						php_ini_loaded_file(),
-						str_replace(
-							[
-								"\nextension=".$step["name"],
-								"\nextension=php_".$step["name"].".dll"
-							],
-							[
-								"\n;extension=".$step["name"],
-								"\n;extension=php_".$step["name"].".dll"
-							],
-							file_get_contents(php_ini_loaded_file())
-						)
-					);
-					break;
-
-				case "install_unix_package":
-					if(Cone::isUnix())
-					{
-						array_push($inverted_actions, ["type" => "remove_unix_package"] + $step);
-						UnixPackageManager::installPackage($step["name"]);
-					}
-					break;
-
-				case "remove_unix_package":
-				case "uninstall_unix_package":
-					if(Cone::isUnix())
-					{
-						array_push($inverted_actions, ["type" => "install_unix_package"] + $step);
-						UnixPackageManager::removePackage($step["name"]);
-					}
-					break;
-
-				case "download":
-					Cone::download(str_replace("{version}", $this->getVersion(), $step["url"]), $step["target"]);
-					if(array_key_exists("hash", $step))
-					{
-						foreach($step["hash"] as $algo => $hash)
-						{
-							if(hash_file($algo, $step["target"]) != $hash)
-							{
-								unlink($step["target"]);
-								throw new Exception($step["target"]." signature mismatch");
-							}
-						}
-					}
-					break;
-
-				case "extract":
-					if(!is_file($step["file"]))
-					{
-						throw new Exception($step["file"]." can't be extracted as it doesn't exist");
-					}
-					Cone::extract($step["file"], $step["target"]);
-					break;
-
-				case "delete":
-					if(!file_exists($step["file"]))
-					{
-						throw new Exception($step["file"]." can't be deleted as it doesn't exist.");
-					}
-					Cone::reallyDelete($step["file"]);
-					break;
-
-				case "keep":
-					$file = str_replace("{version}", $this->getVersion(), $step["file"]);
-					if(!file_exists($file))
-					{
-						throw new Exception($file." can't be kept as it doesn't exist");
-					}
-					$dir = __DIR__."/../packages/".$this->getName()."/";
-					if(!empty($step["as"]) && !is_dir($dir))
-					{
-						mkdir($dir);
-					}
-					rename($file, $dir.$step["as"]);
-					break;
-
-				default:
-					throw new Exception("Unknown step type: ".$step["type"]);
+				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".bat" : ""));
 			}
 		}
-		return $inverted_actions;
+		if(array_key_exists("variables", $data))
+		{
+			if(Cone::isWindows())
+			{
+				foreach($data["variables"] as $name)
+				{
+					shell_exec('REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V '.$name);
+				}
+			}
+			else
+			{
+				$env = [];
+				foreach(file("/etc/environment") as $line)
+				{
+					if($line = trim($line))
+					{
+						$arr = explode("=", $line, 2);
+						$env[$arr[0]] = $arr[1];
+					}
+				}
+				foreach($data["variables"] as $name)
+				{
+					unset($env[$name]);
+				}
+				file_put_contents("/etc/environment", join("\n", $env));
+			}
+		}
+		if(Cone::isWindows() && array_key_exists("file_associations", $data))
+		{
+			foreach($data["file_associations"] as $ext)
+			{
+				shell_exec("Ftype {$ext}file=\nAssoc .{$ext}=");
+			}
+		}
+		if(array_key_exists("uninstall", $data))
+		{
+			$this->performSteps($data["uninstall"]);
+		}
+		unset($installed_packages[$this->getName()]);
+		if(!$in_flow)
+		{
+			Cone::setInstalledPackagesList($installed_packages);
+		}
 	}
 
 	/**
@@ -299,7 +358,6 @@ class Package
 							return;
 						}
 						break;
-
 					default:
 						throw new Exception("Unknown prerequisite type: ".$prerequisite["type"]);
 				}
@@ -444,103 +502,20 @@ class Package
 	}
 
 	/**
-	 * @param array|null $installed_packages
-	 * @throws Exception
+	 * @return Package[]
 	 */
-	function update(&$installed_packages = null)
+	function getDependencies()
 	{
-		$in_flow = $installed_packages !== null;
-		if(!$in_flow)
+		$dependencies = [];
+		foreach($this->getDependenciesList() as $name)
 		{
-			$installed_packages = Cone::getInstalledPackagesList();
+			array_push($dependencies, Cone::getPackage($name));
 		}
-		if(array_key_exists("update", $this->data))
-		{
-			$this->performSteps($this->data["update"]);
-		}
-		else if($this->hasVersion() && (strpos($this->data["version"], "dev") !== false || version_compare($this->data["version"], $this->getInstallData()["version"], ">")))
-		{
-			echo "Updating ".$this->getDisplayName()."...\n";
-			$this->uninstall($installed_packages);
-			$this->install($installed_packages);
-		}
-		if(!$in_flow)
-		{
-			Cone::removeUnneededDependencies($installed_packages);
-			Cone::setInstalledPackagesList($installed_packages);
-		}
+		return $dependencies;
 	}
 
-	/**
-	 * @param array|null $installed_packages
-	 * @throws Exception
-	 */
-	function uninstall(&$installed_packages = null)
+	function getDependenciesList()
 	{
-		$in_flow = $installed_packages !== null;
-		if(!$in_flow)
-		{
-			$installed_packages = Cone::getInstalledPackagesList();
-		}
-		if(!self::isInstalled($installed_packages))
-		{
-			return;
-		}
-		$dir = __DIR__."/../packages/".$this->getName();
-		if(is_dir($dir))
-		{
-			Cone::reallyDelete($dir);
-		}
-		$data = self::getInstallData();
-		if(array_key_exists("shortcuts", $data))
-		{
-			foreach($data["shortcuts"] as $name)
-			{
-				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".bat" : ""));
-			}
-		}
-		if(array_key_exists("variables", $data))
-		{
-			if(Cone::isWindows())
-			{
-				foreach($data["variables"] as $name)
-				{
-					shell_exec('REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V '.$name);
-				}
-			}
-			else
-			{
-				$env = [];
-				foreach(file("/etc/environment") as $line)
-				{
-					if($line = trim($line))
-					{
-						$arr = explode("=", $line, 2);
-						$env[$arr[0]] = $arr[1];
-					}
-				}
-				foreach($data["variables"] as $name)
-				{
-					unset($env[$name]);
-				}
-				file_put_contents("/etc/environment", join("\n", $env));
-			}
-		}
-		if(Cone::isWindows() && array_key_exists("file_associations", $data))
-		{
-			foreach($data["file_associations"] as $ext)
-			{
-				shell_exec("Ftype {$ext}file=\nAssoc .{$ext}=");
-			}
-		}
-		if(array_key_exists("uninstall", $data))
-		{
-			$this->performSteps($data["uninstall"]);
-		}
-		unset($installed_packages[$this->getName()]);
-		if(!$in_flow)
-		{
-			Cone::setInstalledPackagesList($installed_packages);
-		}
+		return array_key_exists("dependencies", $this->data) ? $this->data["dependencies"] : [];
 	}
 }
