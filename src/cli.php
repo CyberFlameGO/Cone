@@ -196,7 +196,10 @@ switch(@$argv[1])
 			die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
 		}
 		echo "Do you know what you're doing?";
-		Cone::noOrYes();
+		if(!Cone::noOrYes())
+		{
+			die("Aborting.\n");
+		}
 		file_put_contents("_update_", "");
 		break;
 	case "rm":
