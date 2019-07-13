@@ -175,18 +175,17 @@ switch(@$argv[1])
 			$res = json_decode(@file_get_contents($url), true);
 			if($error = Cone::validateSourceData($res))
 			{
-				echo $error."\n";
-				$res = null;
-			}
-			if($res === null)
-			{
+				echo $error;
+				$local = 0;
 				foreach($_packages as $package)
 				{
 					if($package->getSource() == $url)
 					{
 						array_push($packages, $package->getData());
+						$local++;
 					}
 				}
+				echo " Restored {$local} packages from local cache.\n";
 				break;
 			}
 			foreach($res["packages"] as $package)

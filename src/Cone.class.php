@@ -165,7 +165,7 @@ final class Cone
 
 	static function validateSourceData($data)
 	{
-		if(empty($data["name"]) || empty($data["packages"]))
+		if(!is_array($data) || empty($data["name"]) || empty($data["packages"]))
 		{
 			return "Invalid package source file.";
 		}
