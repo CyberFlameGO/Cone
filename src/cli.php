@@ -167,7 +167,9 @@ switch(@$argv[1])
 		}
 		$packages = [];
 		$_packages = Cone::getPackages();
-		foreach(Cone::getSources() as $url => $name)
+		$sources = Cone::getSources();
+		$update_sources = false;
+		foreach($sources as $url => $name)
 		{
 			echo "Fetching {$name}... ";
 			$res = json_decode(@file_get_contents($url), true);
@@ -192,8 +194,18 @@ switch(@$argv[1])
 				array_push($packages, ["source" => $url] + $package);
 			}
 			echo "got ".count($res["packages"])." packages.\n";
+			if($name != $res["name"])
+			{
+				echo $name." is now known as ".$res["name"].".\n";
+				$sources[$url] = $res["name"];
+				$update_sources = true;
+			}
 		}
 		Cone::setPackages($packages);
+		if($update_sources)
+		{
+			Cone::setSources($sources);
+		}
 		echo "Updating installed packages...\n";
 		$installed_packages = Cone::getInstalledPackagesList();
 		foreach($installed_packages as $name => $data)
