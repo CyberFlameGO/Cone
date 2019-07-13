@@ -299,15 +299,22 @@ final class Cone
 		}
 	}
 
+	static function yesOrNo()
+	{
+		echo " [Y/n] ";
+		$stdin = fopen("php://stdin", "r");
+		$res = substr(fgets($stdin), 0, 1) != "n";
+		fclose($stdin);
+		return $res;
+	}
+
 	static function noOrYes()
 	{
 		echo " [y/N] ";
 		$stdin = fopen("php://stdin", "r");
-		if(substr(fgets($stdin), 0, 1) != "y")
-		{
-			die("Aborting.\n");
-		}
+		$res = substr(fgets($stdin), 0, 1) == "y";
 		fclose($stdin);
+		return $res;
 	}
 
 	static function timeToContemplate()

@@ -238,7 +238,10 @@ switch(@$argv[1])
 		echo "You currently have ";
 		Cone::printInstalledPackagesList($installed_packages);
 		echo "Are you sure you want to remove them and Cone?";
-		Cone::noOrYes();
+		if(!Cone::noOrYes())
+		{
+			die("Aborting.\n");
+		}
 		Cone::timeToContemplate();
 		foreach($installed_packages as $name => $data)
 		{
@@ -256,7 +259,10 @@ switch(@$argv[1])
 	else
 	{
 		echo "Are you sure you want to remove Cone from your system?";
-		Cone::noOrYes();
+		if(!Cone::noOrYes())
+		{
+			die("Aborting.\n");
+		}
 		Cone::timeToContemplate();
 	}
 	if(Cone::isWindows())
