@@ -48,7 +48,7 @@ switch(@$argv[1])
 	case "install":
 	if(!Cone::isAdmin())
 	{
-		die("Cone needs to run as administrator/root to install packages.\n");
+		die("Cone needs to run as ".Cone::rootOrAdmin()." to install packages.\n");
 	}
 	if(empty($argv[2]))
 	{
@@ -110,7 +110,7 @@ switch(@$argv[1])
 	case "upgrade":
 	if(!Cone::isAdmin())
 	{
-		die("Cone needs to run as administrator/root to update.\n");
+		die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
 	}
 	if(@$argv[2] == "--post-install")
 	{
@@ -155,7 +155,7 @@ switch(@$argv[1])
 	case "force-self-update":
 	if(!Cone::isAdmin())
 	{
-		die("Cone needs to run as administrator/root to update.\n");
+		die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
 	}
 	echo "Do you know what you're doing?";
 	Cone::confirmStupidDecision();
@@ -170,7 +170,7 @@ switch(@$argv[1])
 	case "uninstall":
 	if(!Cone::isAdmin())
 	{
-		die("Cone needs to run as administrator/root to uninstall packages.\n");
+		die("Cone needs to run as ".Cone::rootOrAdmin()." to uninstall packages.\n");
 	}
 	$installed_packages = Cone::getInstalledPackagesList();
 	$packages = [];
@@ -230,7 +230,7 @@ switch(@$argv[1])
 	case "self-uninstall":
 	if(!Cone::isAdmin())
 	{
-		die("Cone needs to run as administrator/root to self-uninstall.\n");
+		die("Cone needs to run as ".Cone::rootOrAdmin()." to self-uninstall.\n");
 	}
 	$installed_packages = Cone::getInstalledPackagesList();
 	if(count($installed_packages) > 0)

@@ -37,6 +37,11 @@ final class Cone
 		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
 	}
 
+	static function rootOrAdmin()
+	{
+		return self::isWindows() ? "administrator" : "root";
+	}
+
 	static function getPathFolder()
 	{
 		return self::isWindows() ? __DIR__."/../path/" : "/usr/bin/";
