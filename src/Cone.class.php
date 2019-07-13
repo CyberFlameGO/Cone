@@ -152,7 +152,7 @@ final class Cone
 		return self::$packages_cache;
 	}
 
-	static function getPackage($name, $try_aliases = false)
+	static function getPackage($name, $include_aliases = false, $include_risky_aliases = true)
 	{
 	    foreach(self::getPackages() as $package)
         {
@@ -161,7 +161,7 @@ final class Cone
                 return $package;
             }
         }
-	    if($try_aliases)
+	    if($include_aliases)
 	    {
             foreach(self::$packages_cache as $package)
             {
@@ -170,6 +170,16 @@ final class Cone
                     return $package;
                 }
             }
+			if($include_risky_aliases)
+			{
+				foreach(self::$packages_cache as $package)
+				{
+					if(in_array($name, $package->getRiskyAliases()))
+					{
+						return $package;
+					}
+				}
+			}
         }
 		return null;
 	}

@@ -69,6 +69,11 @@ class Package
 		return array_key_exists("aliases", $this->data) ? $this->data["aliases"] : [];
 	}
 
+	function getRiskyAliases()
+	{
+		return array_key_exists("risky_aliases", $this->data) ? $this->data["risky_aliases"] : [];
+	}
+
 	function hasVersion()
 	{
 		return array_key_exists("version", $this->data);

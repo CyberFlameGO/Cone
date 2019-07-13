@@ -101,6 +101,18 @@ switch(@$argv[1])
 			}
 			continue;
 		}
+		if(in_array($name, $package->getRiskyAliases()))
+		{
+			echo "When you say ".$name.", do you mean ".$package->getDisplayName()."?";
+			if($force)
+			{
+				echo " [Y/n]\n";
+			}
+			else if(!Cone::yesOrNo())
+			{
+				continue;
+			}
+		}
 		array_push($packages, $package);
 	}
 	$before = count($installed_packages);
