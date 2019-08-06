@@ -212,11 +212,16 @@ class Package
 
 	protected function platformSwitch($step, $callback)
 	{
+		$arch = PHP_INT_SIZE == 8 ? "x64" : "x86";
 		if(Cone::isWindows())
 		{
 			if(array_key_exists("windows", $step))
 			{
 				$callback("windows");
+			}
+			if(array_key_exists("windows_{$arch}", $step))
+			{
+				$callback("windows_{$arch}");
 			}
 		}
 		else
@@ -225,11 +230,19 @@ class Package
 			{
 				$callback("unix");
 			}
+			if(array_key_exists("unix_{$arch}", $step))
+			{
+				$callback("unix_{$arch}");
+			}
 			if(Cone::isLinux())
 			{
 				if(array_key_exists("linux", $step))
 				{
 					$callback("linux");
+				}
+				if(array_key_exists("linux_{$arch}", $step))
+				{
+					$callback("linux_{$arch}");
 				}
 			}
 			else if(Cone::isMacOS())
@@ -237,6 +250,10 @@ class Package
 				if(array_key_exists("macos", $step))
 				{
 					$callback("macos");
+				}
+				if(array_key_exists("macos_{$arch}", $step))
+				{
+					$callback("macos_{$arch}");
 				}
 			}
 		}
