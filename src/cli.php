@@ -185,14 +185,14 @@ switch(@$argv[1])
 						$local++;
 					}
 				}
-				echo " Restored {$local} packages from local cache.\n";
+				echo " Restored {$local} package".($local == 1 ? "" : "s")." from local cache.\n";
 				break;
 			}
 			foreach($res["packages"] as $package)
 			{
 				array_push($packages, ["source" => $url] + $package);
 			}
-			echo "got ".count($res["packages"])." packages.\n";
+			echo "got ".count($res["packages"])." package".(count($res["packages"]) == 1 ? "" : "s").".\n";
 			if($name != $res["name"])
 			{
 				echo $name." is now known as ".$res["name"].".\n";
