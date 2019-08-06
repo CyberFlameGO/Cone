@@ -121,6 +121,9 @@ class Package
 						]);
 					});
 					break;
+				case "echo":
+					echo $step["value"]."\n";
+					break;
 				case "shell_exec":
 					passthru($step["value"]);
 					break;
