@@ -1,6 +1,5 @@
 @ECHO OFF
 TITLE Cone Installer
-SET CONE_VERSION=0.9.0
 
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
@@ -9,7 +8,13 @@ IF NOT %errorLevel% == 0 (
 	EXIT
 )
 
-CD %ProgramFiles(x86)%
+SET CONE_VERSION=0.9.0
+SET ARCH=x86
+IF %processor_architecture% == AMD64 (
+	SET ARCH=x64
+)
+
+CD %ProgramFiles%
 WHERE php.exe > php.txt
 IF %errorLevel% == 0 (
 	SET /p php=<php.txt
@@ -17,9 +22,9 @@ IF %errorLevel% == 0 (
 )
 
 CLS
-SET PHP_VERSION=7.3.6
+SET PHP_VERSION=7.3.8
 ECHO Downloading PHP %PHP_VERSION%...
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.hell.sh/php-%PHP_VERSION%-nts-Win32-VC15-x86.zip -UseBasicParsing -OutFile %tmp%\php.zip"
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.getcone.org/php-%PHP_VERSION%-nts-Win32-VC15-%ARCH%.zip -UseBasicParsing -OutFile %tmp%\php.zip"
 
 ECHO Unpacking PHP...
 MKDIR "%tmp%\PHP %PHP_VERSION%"
@@ -41,7 +46,6 @@ DEL php.txt
 "%php%" -r "file_put_contents(php_ini_loaded_file(), str_replace(';extension=openssl', 'extension=openssl', file_get_contents(php_ini_loaded_file())));"
 
 ECHO Downloading Cone v%CONE_VERSION%...
-CD %ProgramFiles%
 IF NOT EXIST Hell.sh\ MKDIR Hell.sh
 CD Hell.sh
 IF NOT EXIST Cone\ MKDIR Cone
