@@ -8,7 +8,7 @@ IF NOT %errorLevel% == 0 (
 	EXIT
 )
 
-SET CONE_VERSION=0.9.0
+SET CONE_VERSION=0.10.0
 SET ARCH=x86
 IF %processor_architecture% == AMD64 (
 	SET ARCH=x64
