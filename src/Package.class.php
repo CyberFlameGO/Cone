@@ -73,7 +73,7 @@ class Package
 		{
 			echo "Updating ".$this->getDisplayName()."...\n";
 			$this->uninstall($installed_packages);
-			$this->install($installed_packages);
+			$this->install($installed_packages, true);
 		}
 		if(!$in_flow)
 		{
