@@ -68,6 +68,9 @@ MOVE %tmp%\Cone-%CONE_VERSION%\src src
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.bat DEL path\cone.bat
 MOVE %tmp%\Cone-%CONE_VERSION%\cone.bat path\cone.bat
+IF EXIST path\cone DEL path\cone
+ECHO #!/bin/bash > path\cone
+ECHO cone.bat "$@" >> path\cone
 RMDIR /S /Q %tmp%\Cone-%CONE_VERSION%
 IF EXIST _update_ (
 	DEL _update_

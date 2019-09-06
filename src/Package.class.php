@@ -312,7 +312,11 @@ class Package
 		{
 			foreach($data["shortcuts"] as $name)
 			{
-				unlink(Cone::getPathFolder().$name.(Cone::isWindows() ? ".bat" : ""));
+				unlink(Cone::getPathFolder().$name);
+				if(Cone::isWindows())
+				{
+					unlink(Cone::getPathFolder().$name.".bat");
+				}
 			}
 		}
 		if(array_key_exists("variables", $data))
@@ -474,13 +478,13 @@ class Package
 					}
 				}
 				$path = Cone::getPathFolder().$name;
+				file_put_contents($path, "#!/bin/bash\n{$target}\"\$@\"");
 				if(Cone::isWindows())
 				{
-					file_put_contents($path.".bat", "@ECHO OFF\n".$target."%*");
+					file_put_contents($path.".bat", "@ECHO OFF\n{$target}%*");
 				}
 				else
 				{
-					file_put_contents($path, "#!/bin/bash\n{$target}\"\$@\"");
 					shell_exec("chmod +x ".$path);
 				}
 			}
