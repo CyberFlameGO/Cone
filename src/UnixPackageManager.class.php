@@ -62,7 +62,7 @@ class UnixPackageManager
 		{
 			case "aptitude":
 			case "apt-get":
-				passthru("{$mgr} -y update && {$mgr} -y upgrade");
+				passthru("{$mgr} -y update && {$mgr} -y dist-upgrade");
 				break;
 			case "pacman":
 				passthru("pacman --noconfirm -Syu");
