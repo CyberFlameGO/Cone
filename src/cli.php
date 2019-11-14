@@ -268,13 +268,8 @@ switch(@$argv[1])
 			}
 			if(!array_key_exists($name, $installed_packages))
 			{
-				$p = Cone::getPackage($name, true);
-				if($p == null)
-				{
-					echo $name." is not installed.\n";
-					continue;
-				}
-				$name = $p->getName();
+				echo $name." is not installed.\n";
+				continue;
 			}
 			array_push($packages, $name);
 		}
