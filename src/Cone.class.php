@@ -343,9 +343,12 @@ final class Cone
 		if(self::$packages_cache === null)
 		{
 			self::$packages_cache = [];
-			foreach(json_decode(file_get_contents(self::PACKAGES_FILE), true) as $raw_package)
+			if(is_file(self::PACKAGES_FILE))
 			{
-				array_push(self::$packages_cache, new Package($raw_package));
+				foreach(json_decode(file_get_contents(self::PACKAGES_FILE), true) as $raw_package)
+				{
+					array_push(self::$packages_cache, new Package($raw_package));
+				}
 			}
 		}
 		return self::$packages_cache;
