@@ -363,21 +363,32 @@ final class Cone
 		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages, JSON_UNESCAPED_SLASHES));
 	}
 
+	static function readInputLine()
+	{
+		if(self::isWindows())
+		{
+			ob_start();
+			$input = substr(system("SET /P cone_input= & SET cone_input"), 11);
+			ob_end_clean();
+			return trim($input);
+		}
+		else
+		{
+			return trim(fgets(STDIN));
+		}
+	}
+
 	static function yesOrNo()
 	{
 		echo " [Y/n] ";
-		$stdin = fopen("php://stdin", "r");
-		$res = substr(fgets($stdin), 0, 1) != "n";
-		fclose($stdin);
+		$res = substr(self::readInputLine(), 0, 1) != "n";
 		return $res;
 	}
 
 	static function noOrYes()
 	{
 		echo " [y/N] ";
-		$stdin = fopen("php://stdin", "r");
-		$res = substr(fgets($stdin), 0, 1) == "y";
-		fclose($stdin);
+		$res = substr(self::readInputLine(), 0, 1) == "y";
 		return $res;
 	}
 
