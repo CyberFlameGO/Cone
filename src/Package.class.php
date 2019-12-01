@@ -465,10 +465,10 @@ class Package
 				}
 				$target = join(" ", self::getShortcutTarget($dir, $data));
 				$path = Cone::getPathFolder().$name;
-				file_put_contents($path, "#!/bin/bash\n{$target}\"\$@\"");
+				file_put_contents($path, "#!/bin/bash\n{$target} \"\$@\"");
 				if(Cone::isWindows())
 				{
-					file_put_contents($path.".bat", "@ECHO OFF\n{$target}%*");
+					file_put_contents($path.".bat", "@ECHO OFF\n{$target} %*");
 				}
 				else
 				{
