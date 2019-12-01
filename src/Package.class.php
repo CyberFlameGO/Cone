@@ -379,45 +379,6 @@ class Package
 	}
 
 	/**
-	 * @param string $dir
-	 * @param array $data
-	 * @return string[]
-	 */
-	private static function getShortcutTarget($dir, $data)
-	{
-		$target = $dir."/".$data["target"];
-		if(Cone::isWindows() && array_key_exists("target_winext", $data))
-		{
-			$target .= $data["target_winext"];
-		}
-		$target = realpath($target);
-		if($target)
-		{
-			$target = "\"{$target}\"";
-		}
-		else
-		{
-			$target = $data["target"];
-		}
-		$args = "";
-		if(array_key_exists("target_arguments", $data))
-		{
-			foreach($data["target_arguments"] as $arg)
-			{
-				if(array_key_exists("path", $arg))
-				{
-					$args .= "\"".realpath($dir."/".$arg["path"])."\" ";
-				}
-				else
-				{
-					$args .= $arg["value"]." ";
-				}
-			}
-		}
-		return [$target, rtrim($args)];
-	}
-
-	/**
 	 * @param array|null $installed_packages
 	 * @param bool $force
 	 * @param array $env_arr
@@ -531,7 +492,7 @@ class Package
 				$target = self::getShortcutTarget($dir, $data);
 				if(Cone::isWindows())
 				{
-					file_put_contents("tmp.vbs", "Set s = WScript.CreateObject(\"WScript.Shell\")\r\nSet l = s.CreateShortcut(\"".realpath(getenv("PROGRAMDATA")."/Microsoft/Windows/Start Menu/Programs/Hell.sh/Cone/")."\\$name.lnk\")\r\nl.TargetPath = \"".$target[0]."\"\r\nl.Arguments = \"".str_replace("\"", "\"\"",$target[1])."\"\r\nl.Save\r\n");
+					file_put_contents("tmp.vbs", "Set s = WScript.CreateObject(\"WScript.Shell\")\r\nSet l = s.CreateShortcut(\"".realpath(getenv("PROGRAMDATA")."/Microsoft/Windows/Start Menu/Programs/Hell.sh/Cone/")."\\$name.lnk\")\r\nl.TargetPath = \"".$target[0]."\"\r\nl.Arguments = \"".str_replace("\"", "\"\"", $target[1])."\"\r\nl.Save\r\n");
 					echo file_get_contents("tmp.vbs")."\n";
 					shell_exec("cscript //nologo tmp.vbs");
 					unlink("tmp.vbs");
@@ -610,5 +571,47 @@ class Package
 	function getDependenciesList()
 	{
 		return array_key_exists("dependencies", $this->data) ? $this->data["dependencies"] : [];
+	}
+
+	/**
+	 * @param string $dir
+	 * @param array $data
+	 * @return string[]
+	 */
+	private static function getShortcutTarget($dir, $data)
+	{
+		$target = $dir."/".$data["target"];
+		if(Cone::isWindows() && array_key_exists("target_winext", $data))
+		{
+			$target .= $data["target_winext"];
+		}
+		$target = realpath($target);
+		if($target)
+		{
+			$target = "\"{$target}\"";
+		}
+		else
+		{
+			$target = $data["target"];
+		}
+		$args = "";
+		if(array_key_exists("target_arguments", $data))
+		{
+			foreach($data["target_arguments"] as $arg)
+			{
+				if(array_key_exists("path", $arg))
+				{
+					$args .= "\"".realpath($dir."/".$arg["path"])."\" ";
+				}
+				else
+				{
+					$args .= $arg["value"]." ";
+				}
+			}
+		}
+		return [
+			$target,
+			rtrim($args)
+		];
 	}
 }

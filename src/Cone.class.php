@@ -363,6 +363,13 @@ final class Cone
 		file_put_contents(self::INSTALLED_PACKAGES_FILE, json_encode($installed_packages, JSON_UNESCAPED_SLASHES));
 	}
 
+	static function yesOrNo()
+	{
+		echo " [Y/n] ";
+		$res = substr(self::readInputLine(), 0, 1) != "n";
+		return $res;
+	}
+
 	static function readInputLine()
 	{
 		if(self::isWindows())
@@ -376,13 +383,6 @@ final class Cone
 		{
 			return trim(fgets(STDIN));
 		}
-	}
-
-	static function yesOrNo()
-	{
-		echo " [Y/n] ";
-		$res = substr(self::readInputLine(), 0, 1) != "n";
-		return $res;
 	}
 
 	static function noOrYes()
