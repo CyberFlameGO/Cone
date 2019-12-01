@@ -10,7 +10,7 @@ IF NOT %errorLevel% == 0 (
 )
 
 :: Parameters
-SET CONE_VERSION=0.10.3
+SET CONE_VERSION=0.11
 SET ARCH=x86
 IF %processor_architecture% == AMD64 (
 	SET ARCH=x64
