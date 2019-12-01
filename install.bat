@@ -97,6 +97,14 @@ ECHO #!/bin/bash > path\cone
 ECHO cone.bat "$@" >> path\cone
 RMDIR /S /Q %tmp%\Cone-%CONE_VERSION%
 
+:: Create Start Menu Folder
+SET install_dir=%cd%
+CD "%ProgramData%\Microsoft\Windows\Start Menu\Programs"
+IF NOT EXIST Hell.sh\ MKDIR Hell.sh
+CD Hell.sh
+IF NOT EXIST Cone\ MKDIR Cone
+CD %install_dir%
+
 IF EXIST _update_ (
     :: Finish Update
 	DEL _update_

@@ -319,6 +319,20 @@ class Package
 				}
 			}
 		}
+		if(array_key_exists("startmenu", $data))
+		{
+			foreach($data["startmenu"] as $name)
+			{
+				if(Cone::isWindows())
+				{
+					unlink(getenv("PROGRAMDATA")."/Microsoft/Windows/Start Menu/Programs/Hell.sh/Cone/$name.lnk");
+				}
+				else if(is_dir(getenv("HOME")."/.local/share/applications"))
+				{
+					unlink(getenv("HOME")."/.local/share/applications/$name.desktop");
+				}
+			}
+		}
 		if(array_key_exists("variables", $data))
 		{
 			if(Cone::isWindows())
@@ -362,6 +376,45 @@ class Package
 		{
 			Cone::setInstalledPackages($installed_packages);
 		}
+	}
+
+	/**
+	 * @param string $dir
+	 * @param array $data
+	 * @return string[]
+	 */
+	private static function getShortcutTarget($dir, $data)
+	{
+		$target = $dir."/".$data["target"];
+		if(Cone::isWindows() && array_key_exists("target_winext", $data))
+		{
+			$target .= $data["target_winext"];
+		}
+		$target = realpath($target);
+		if($target)
+		{
+			$target = "\"{$target}\"";
+		}
+		else
+		{
+			$target = $data["target"];
+		}
+		$args = "";
+		if(array_key_exists("target_arguments", $data))
+		{
+			foreach($data["target_arguments"] as $arg)
+			{
+				if(array_key_exists("path", $arg))
+				{
+					$args .= "\"".realpath($dir."/".$arg["path"])."\" ";
+				}
+				else
+				{
+					$args .= $arg["value"]." ";
+				}
+			}
+		}
+		return [$target, rtrim($args)];
 	}
 
 	/**
@@ -449,34 +502,7 @@ class Package
 				{
 					throw new Exception("Shortcut is missing target");
 				}
-				$target = $dir."/".$data["target"];
-				if(Cone::isWindows() && array_key_exists("target_winext", $data))
-				{
-					$target .= $data["target_winext"];
-				}
-				$target = realpath($target);
-				if($target)
-				{
-					$target = "\"{$target}\" ";
-				}
-				else
-				{
-					$target = $data["target"]." ";
-				}
-				if(array_key_exists("target_arguments", $data))
-				{
-					foreach($data["target_arguments"] as $arg)
-					{
-						if(array_key_exists("path", $arg))
-						{
-							$target .= "\"".realpath($dir."/".$arg["path"])."\" ";
-						}
-						else
-						{
-							$target .= $arg["value"]." ";
-						}
-					}
-				}
+				$target = join(" ", self::getShortcutTarget($dir, $data));
 				$path = Cone::getPathFolder().$name;
 				file_put_contents($path, "#!/bin/bash\n{$target}\"\$@\"");
 				if(Cone::isWindows())
@@ -489,6 +515,33 @@ class Package
 				}
 			}
 			$installed_packages[$this->getName()]["shortcuts"] = array_keys($this->data["shortcuts"]);
+		}
+		if(array_key_exists("startmenu", $this->data))
+		{
+			if($dir === false)
+			{
+				throw new Exception("Can't create any start menu entries as no file was kept");
+			}
+			foreach($this->data["startmenu"] as $name => $data)
+			{
+				if(!array_key_exists("target", $data))
+				{
+					throw new Exception("Start menu entry is missing target");
+				}
+				$target = self::getShortcutTarget($dir, $data);
+				if(Cone::isWindows())
+				{
+					file_put_contents("tmp.vbs", "Set s = WScript.CreateObject(\"WScript.Shell\")\r\nSet l = s.CreateShortcut(\"".realpath(getenv("PROGRAMDATA")."/Microsoft/Windows/Start Menu/Programs/Hell.sh/Cone/")."\\$name.lnk\")\r\nl.TargetPath = \"".$target[0]."\"\r\nl.Arguments = \"".str_replace("\"", "\"\"",$target[1])."\"\r\nl.Save\r\n");
+					echo file_get_contents("tmp.vbs")."\n";
+					shell_exec("cscript //nologo tmp.vbs");
+					unlink("tmp.vbs");
+				}
+				else if(is_dir(getenv("HOME")."/.local/share/applications"))
+				{
+					file_put_contents(getenv("HOME")."/.local/share/applications/$name.desktop", "[Desktop Entry]\nName=$name\nExec=".join(" ", $target)."\n");
+				}
+			}
+			$installed_packages[$this->getName()]["startmenu"] = array_keys($this->data["startmenu"]);
 		}
 		if(array_key_exists("variables", $this->data))
 		{
