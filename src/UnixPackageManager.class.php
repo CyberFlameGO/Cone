@@ -1,13 +1,11 @@
 <?php
 namespace Cone;
-use Exception;
 class UnixPackageManager
 {
 	private static $native_package_manager;
 
 	/**
 	 * @param $package
-	 * @throws Exception
 	 */
 	static function installPackage($package)
 	{
@@ -53,9 +51,6 @@ class UnixPackageManager
 		];
 	}
 
-	/**
-	 * @throws Exception
-	 */
 	static function updateAllPackages()
 	{
 		switch($mgr = self::getNativePackageManager())
@@ -71,7 +66,6 @@ class UnixPackageManager
 
 	/**
 	 * @param $package
-	 * @throws Exception
 	 */
 	static function removePackage($package)
 	{

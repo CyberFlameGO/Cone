@@ -230,7 +230,6 @@ switch(@$argv[1])
 			echo "Would you like to perform an update with {$native} as well?";
 			if(Cone::yesOrNo())
 			{
-				/** @noinspection PhpUnhandledExceptionInspection */
 				UnixPackageManager::updateAllPackages();
 			}
 		}
