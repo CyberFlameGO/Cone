@@ -265,12 +265,13 @@ switch(@$argv[1])
 			{
 				die("If you're looking to uninstall Cone, use 'cone self-uninstall'.\n");
 			}
-			if(!array_key_exists($name, $installed_packages))
+			$p = Cone::getPackage($name, true);
+			if($p === null || !array_key_exists($p->getName(), $installed_packages))
 			{
 				echo $name." is not installed.\n";
 				continue;
 			}
-			array_push($packages, $name);
+			array_push($packages, $p->getName());
 		}
 		foreach($packages as $package)
 		{
