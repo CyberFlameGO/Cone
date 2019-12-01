@@ -414,11 +414,23 @@ switch(@$argv[1])
 			{
 				die("Aborting.\n");
 			}
-			Cone::timeToContemplate();
 		}
+		echo "Would you also like to remove PHP-CLI?";
+		$remove_php = Cone::yesOrNo();
 		if(Cone::isWindows())
 		{
-			shell_exec('REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "'.str_replace(realpath("path")."\\;", "", getenv("PATH")).'"');
+			$path = str_replace(realpath("path")."\\;", "", getenv("PATH"));
+			if($remove_php)
+			{
+				$phpdir = realpath(dirname(shell_exec("WHERE php.exe")));
+				$path = str_replace($phpdir."\\;", "", $path);
+				file_put_contents("_uninstall_php_", $phpdir);
+			}
+			shell_exec('REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V PATH /T REG_SZ /D "'.$path.'"');
+		}
+		else if($remove_php)
+		{
+			UnixPackageManager::removePackage("php-cli");
 		}
 		file_put_contents("_uninstall_", "");
 		break;
