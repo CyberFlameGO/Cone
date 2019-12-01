@@ -24,7 +24,12 @@ IF %errorLevel% == 0 (
 CLS
 SET PHP_VERSION=7.4.0
 ECHO Downloading PHP %PHP_VERSION%...
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.getcone.org/php-%PHP_VERSION%-nts-Win32-VC15-%ARCH%.zip -UseBasicParsing -OutFile %tmp%\php.zip"
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.getcone.org/php-%PHP_VERSION%-nts-Win32-vc15-%ARCH%.zip -UseBasicParsing -OutFile %tmp%\php.zip"
+IF NOT EXIST "%tmp%\php.zip" (
+    ECHO Failed to download PHP.
+    PAUSE > NUL
+    EXIT
+)
 
 ECHO Unpacking PHP...
 MKDIR "%tmp%\PHP %PHP_VERSION%"
@@ -33,10 +38,15 @@ ECHO s.NameSpace("%tmp%\PHP %PHP_VERSION%").CopyHere(s.NameSpace("%tmp%\php.zip"
 cscript //nologo tmp.vbs
 DEL tmp.vbs
 DEL %tmp%\php.zip
-MOVE "%tmp%\PHP %PHP_VERSION%" "PHP %PHP_VERSION%"
+MOVE "%tmp%\PHP %PHP_VERSION%" .
 
 ECHO Installing PHP...
 SET php=%cd%\PHP %PHP_VERSION%\php.exe
+IF NOT EXIST "%php%" (
+    ECHO Failed to install PHP.
+    PAUSE > NUL
+    EXIT
+)
 SET PATH=%cd%\PHP %PHP_VERSION%\;%PATH%
 
 :phpinstalled
@@ -52,6 +62,12 @@ IF NOT EXIST Cone\ MKDIR Cone
 CD Cone
 IF EXIST Cone.zip DEL Cone.zip
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://github.com/getcone/Cone/archive/v%CONE_VERSION%.zip -UseBasicParsing -OutFile %tmp%\Cone.zip"
+
+IF NOT EXIST "%tmp%\Cone.zip" (
+    ECHO Failed to download Cone.
+    PAUSE > NUL
+    EXIT
+)
 
 IF EXIST _update_ (
 	ECHO Updating Cone...
