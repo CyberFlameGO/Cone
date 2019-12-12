@@ -2,9 +2,11 @@
 
 One intuitive package manager for all operations systems.
 
-## [[ Download for Windows ]](https://code.getcone.org/install.bat)
+## Download
 
-Download for Mac OS & Linux: `wget -qO- https://code.getcone.org/install.sh | sudo bash`
+- [Windows](https://code.getcone.org/install.bat)
+- Linux: `su --session-command "wget -qO- https://code.getcone.org/install.sh | bash"`
+- Mac OS: `wget -qO- https://code.getcone.org/install.sh | sudo bash`
 
 ## See also
 
