@@ -5,7 +5,7 @@ TITLE Cone Installer
 NET SESSION 1>NUL 2>NUL
 IF NOT %errorLevel% == 0 (
 	ECHO Requesting elevation...
-	powershell "saps -filepath %0 -verb runas"
+	powershell "saps -filepath '%0' -verb runas"
 	EXIT
 )
 
