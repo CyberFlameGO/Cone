@@ -509,8 +509,8 @@ switch(@$argv[1])
 		echo "\n";
 		echo Cone::getString("help_category_packages")."\n";
 		echo "  update                         ".Cone::getString("help_update")."\n";
-		echo "  get <".Cone::getString("packages")." ...> [--force]   ".Cone::getString("help_install")."\n";
-		echo "  remove <".Cone::getString("packages")." ...>          ".Cone::getString("help_remove")."\n";
+		echo "  get <".Cone::getString("packages")." ...> [--force]     ".Cone::getString("help_install")."\n";
+		echo "  remove <".Cone::getString("packages")." ...>            ".Cone::getString("help_remove")."\n";
 		echo "  self-uninstall                 ".Cone::getString("help_self_uninstall")."\n";
 		echo "  force-self-update              ".Cone::getString("help_force_self_update")."\n";
 		echo "\n";
