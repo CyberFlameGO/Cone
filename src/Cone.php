@@ -65,7 +65,7 @@ final class Cone
 		{
 			$locale = self::getLocale();
 		}
-		$locale = str_replace($locale, "_", "-");
+		$locale = str_replace("_", "-", $locale);
 		foreach(scandir(self::TRANSLATIONS_DIR) as $file)
 		{
 			if($file == $locale)
@@ -77,7 +77,7 @@ final class Cone
 		$locale = substr($locale, 0, 2);
 		foreach(scandir(self::TRANSLATIONS_DIR) as $file)
 		{
-			if(strlen($file) > 2 && substr($file, 0, 2) == $locale)
+			if(substr($file, 0, 2) == $locale)
 			{
 				require self::TRANSLATIONS_DIR.$locale."/messages.php";
 				return;
