@@ -4,9 +4,11 @@ use Exception;
 final class Cone
 {
 	const VERSION = "0.11.1";
+	const TRANSLATIONS_DIR = __DIR__."/../lang/";
 	const SOURCES_FILE = __DIR__."/../sources.json";
 	const PACKAGES_FILE = __DIR__."/../packages.json";
 	const INSTALLED_PACKAGES_FILE = __DIR__."/../installed_packages.json";
+	static $strings;
 	/**
 	 * @var $packages_cache string[]
 	 */
@@ -16,6 +18,68 @@ final class Cone
 	 */
 	private static $packages_cache;
 	private static $installed_packages_cache;
+
+	static function getString($key, $replacements = null)
+	{
+		if(self::$strings === null)
+		{
+			self::loadStrings();
+		}
+		$string = self::$strings[$key];
+		if($replacements !== null)
+		{
+			$string = str_replace(array_keys($replacements), array_values($replacements), $string);
+		}
+		return $string;
+	}
+
+	/** @noinspection PhpIncludeInspection */
+
+	static function loadStrings($locale = null)
+	{
+		if(!$locale)
+		{
+			$locale = self::getLocale();
+		}
+		$locale = str_replace($locale, "_", "-");
+		foreach(scandir(self::TRANSLATIONS_DIR) as $file)
+		{
+			if($file == $locale)
+			{
+				require self::TRANSLATIONS_DIR.$locale."/messages.php";
+				return;
+			}
+		}
+		$locale = substr($locale, 0, 2);
+		foreach(scandir(self::TRANSLATIONS_DIR) as $file)
+		{
+			if(strlen($file) > 2 && substr($file, 0, 2) == $locale)
+			{
+				require self::TRANSLATIONS_DIR.$locale."/messages.php";
+				return;
+			}
+		}
+		require self::TRANSLATIONS_DIR."en/messages.php";
+	}
+
+	static function getLocale()
+	{
+		$lang = getenv("LANG");
+		if($lang)
+		{
+			return explode(".", $lang)[0]; // e.g., drop ".UTF-8" in "en_US.UTF-8"
+		}
+		if(self::isWindows())
+		{
+			return trim(shell_exec("powershell /c \"(Get-UICulture).Name\""));
+		}
+		return "";
+	}
+
+	static function isWindows()
+	{
+		return defined("PHP_WINDOWS_VERSION_MAJOR");
+	}
 
 	static function isMacOS()
 	{
@@ -32,36 +96,14 @@ final class Cone
 		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
 	}
 
-	static function isWindows()
-	{
-		return defined("PHP_WINDOWS_VERSION_MAJOR");
-	}
-
 	static function rootOrAdmin()
 	{
-		return self::isWindows() ? "administrator" : "root";
+		return self::isWindows() ? self::getString("admin") : "root";
 	}
 
 	static function getPathFolder()
 	{
 		return self::isWindows() ? __DIR__."/../path/" : "/usr/bin/";
-	}
-
-	static function getPhpIni()
-	{
-		$ini = php_ini_loaded_file();
-		if($ini !== false)
-		{
-			return $ini;
-		}
-		$dir = self::getPhpDir();
-		copy($dir."/php.ini-development", $dir."/php.ini");
-		return $dir."/php.ini";
-	}
-
-	static function getPhpDir()
-	{
-		return dirname(self::which("php"));
 	}
 
 	static function which($name)
@@ -148,7 +190,7 @@ final class Cone
 			}
 			else
 			{
-				self::setSources(["https://packages.getcone.org/main.json" => "Cone Main Repository"]);
+				self::setSources(["https://repository.getcone.org/main.json" => Cone::getString("main_repo")]);
 			}
 		}
 		return self::$sources_cache;
@@ -167,13 +209,13 @@ final class Cone
 	{
 		if(!is_array($data) || empty($data["name"]) || empty($data["packages"]))
 		{
-			return "Invalid package source file.";
+			return Cone::getString("repo_invalid");
 		}
 		if(array_key_exists("cone_min", $data) && version_compare($data["cone_min"], self::VERSION, ">"))
 		{
-			return "This package list was made for Cone ".$data["cone_min"]." and above.";
+			return Cone::getString("repo_version", ["%" => "v".$data["cone_min"]]);
 		}
-		return "";
+		return null;
 	}
 
 	/**
@@ -193,10 +235,17 @@ final class Cone
 		}
 		if(count($installed_packages) == 0)
 		{
-			echo "0 packages installed.\n";
+			echo self::getString("list_plural", ["%" => "0"]).".\n";
 			return;
 		}
-		echo count($installed_packages)." package".(count($installed_packages) == 1 ? "" : "s")." installed";
+		if(count($installed_packages) == 1)
+		{
+			echo self::getString("list_singular");
+		}
+		else
+		{
+			echo self::getString("list_plural", ["%" => count($installed_packages)]);
+		}
 		$packages = [];
 		$dependencies = [];
 		foreach($installed_packages as $name => $data)
@@ -210,14 +259,11 @@ final class Cone
 				$dependencies[$name] = $data;
 			}
 		}
-		if(empty($dependencies))
+		if(count($dependencies) > 0)
 		{
-			echo ":\n";
+			echo "; ".self::getString("list_manual", ["%" => count($packages)]);
 		}
-		else
-		{
-			echo "; ".count($packages)." manually-installed:\n";
-		}
+		echo ":\n";
 		foreach($packages as $name => $data)
 		{
 			echo $data["display_name"];
@@ -232,11 +278,19 @@ final class Cone
 			}
 			echo "\n";
 		}
-		if(empty($dependencies))
+		if(count($dependencies) == 0)
 		{
 			return;
 		}
-		echo "and ".count($dependencies)." dependenc".(count($dependencies) == 1 ? "y" : "ies").":\n";
+		if(count($dependencies) == 1)
+		{
+			echo self::getString("list_dependency");
+		}
+		else
+		{
+			echo self::getString("list_dependencies", ["%" => count($dependencies)]);
+		}
+		echo ":\n";
 		foreach($dependencies as $name => $data)
 		{
 			echo $name;
@@ -285,7 +339,7 @@ final class Cone
 				}
 				if(!$needed)
 				{
-					echo "Removing unneeded dependency ".$data["display_name"]."...\n";
+					echo self::getString("unneeded_dependency", ["%" => $data["display_name"]])."\n";
 					try
 					{
 						$package->uninstall($installed_packages);
@@ -366,8 +420,7 @@ final class Cone
 	static function yesOrNo()
 	{
 		echo " [Y/n] ";
-		$res = substr(self::readInputLine(), 0, 1) != "n";
-		return $res;
+		return substr(self::readInputLine(), 0, 1) != "n";
 	}
 
 	static function readInputLine()
@@ -388,8 +441,7 @@ final class Cone
 	static function noOrYes()
 	{
 		echo " [y/N] ";
-		$res = substr(self::readInputLine(), 0, 1) == "y";
-		return $res;
+		return substr(self::readInputLine(), 0, 1) == "y";
 	}
 
 	static function timeToContemplate()

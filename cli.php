@@ -13,18 +13,21 @@ switch(@$argv[1])
 	case "version":
 	case "-version":
 	case "--version":
-		echo "Cone ".Cone::VERSION." running on PHP ".PHP_VERSION.".\nUse 'cone update' to check for updates.\n";
+		echo Cone::getString("info_version", [
+				"%CONE_VERSION%" => "v".Cone::VERSION,
+				"%PHP_VERSION%" => PHP_VERSION
+			])."\n".Cone::getString("info_update")."\n";
 		break;
 	case "ls":
 	case "list":
 	case "installed":
 	case "list-installed":
 		Cone::printInstalledPackages();
-		echo "Use 'cone installable' for a list of installable packages.\n";
+		echo Cone::getString("list_installable", ["%COMMAND%" => "'cone installable'"])."\n";
 		break;
 	case "installable":
 	case "list-installable":
-		echo "You can 'cone get' these packages:\n";
+		echo Cone::getString("installable")."\n";
 		foreach(Cone::getPackages() as $package)
 		{
 			echo $package->getName().": ".$package->getDisplayName();
@@ -48,47 +51,35 @@ switch(@$argv[1])
 	case "install":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to install packages.\n");
+			die(Cone::getString("install_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
 		if(empty($argv[2]))
 		{
-			die("Syntax: cone install <packages ...> [--force]\n");
+			die(Cone::getString("syntax").": cone install <".Cone::getString("packages")." ...> [--force]\n");
 		}
-		if(in_array($argv[2], [
-			"gud",
-			"good"
-		]))
+		if($argv[2] == "gud" || $argv[2] == "good")
 		{
-			die("I'm afraid there's no easy way for that.\n");
+			die(Cone::getString("get_good")."\n");
 		}
 		$installed_packages = Cone::getInstalledPackagesList();
 		$packages = [];
-		$force = false;
+		$force = 0;
+		$args = [];
 		for($i = 2; $i < count($argv); $i++)
 		{
-			if(in_array(strtolower($argv[$i]), [
-				'--force',
-				'-f'
-			]))
+			$args[$i] = strtolower($argv[$i]);
+			if($args[$i] == "--force" || $args[$i] == "-f")
 			{
-				if($force)
+				if(++$force == 2)
 				{
-					echo "Double-force activated!\n";
+					echo Cone::getString("double_force")."\n";
 				}
-				$force = true;
+				unset($args[$i]);
 				continue;
 			}
 		}
-		for($i = 2; $i < count($argv); $i++)
+		foreach($args as $name)
 		{
-			$name = strtolower($argv[$i]);
-			if($force && in_array($name, [
-					'--force',
-					'-f'
-				]))
-			{
-				continue;
-			}
 			$package = Cone::getPackage($name, true);
 			if($package === null)
 			{
@@ -96,27 +87,35 @@ switch(@$argv[1])
 			}
 			if(array_key_exists($package->getName(), $installed_packages))
 			{
+				$replacements = ["%" => $package->getDisplayName()];
 				if($installed_packages[$package->getName()]["manual"])
 				{
-					echo $package->getDisplayName()." is already installed.\n";
+					echo Cone::getString("already_installed", $replacements)."\n";
 				}
 				else
 				{
-					echo $package->getDisplayName()." is already installed; now set to manually installed.\n";
+					echo Cone::getString("already_installed_dependency", $replacements)."\n";
 					$installed_packages[$package->getName()]["manual"] = true;
 				}
 				continue;
 			}
 			if(in_array($name, $package->getRiskyAliases()))
 			{
-				echo "When you say ".$name.", do you mean ".$package->getDisplayName()."?";
+				$replacements = [
+					"%RISKY_ALIAS%" => $name,
+					"%PACKAGE_NAME%" => $package->getDisplayName()
+				];
 				if($force)
 				{
-					echo " [Y/n]\n";
+					echo Cone::getString("risky_alias_force", $replacements).".\n";
 				}
-				else if(!Cone::yesOrNo())
+				else
 				{
-					continue;
+					echo Cone::getString("risky_alias", $replacements);
+					if(!Cone::yesOrNo())
+					{
+						continue;
+					}
 				}
 			}
 			array_push($packages, $package);
@@ -127,7 +126,7 @@ switch(@$argv[1])
 		{
 			try
 			{
-				$package->install($installed_packages, $force, $env_arr);
+				$package->install($installed_packages, $force > 0, $env_arr);
 			}
 			catch(Exception $e)
 			{
@@ -135,11 +134,22 @@ switch(@$argv[1])
 			}
 		}
 		$count = (count($installed_packages) - $before);
-		echo "Installed ".$count." package".($count == 1 ? "" : "s").".\n";
-		Cone::setInstalledPackages($installed_packages);
-		if($env_arr)
+		if($count == 1)
 		{
-			echo "In order to use the environment variable".(count($env_arr) == 1 ? " that was" : "s that were")." just defined (".join(", ", $env_arr)."), open a new terminal window.\n";
+			echo Cone::getString("installed_singular")."\n";
+		}
+		else
+		{
+			echo Cone::getString("installed_plural", ["%" => $count])."\n";
+		}
+		Cone::setInstalledPackages($installed_packages);
+		if(count($env_arr) == 1)
+		{
+			echo Cone::getString("install_env_singular", ["%" => $env_arr[0]])."\n";
+		}
+		else if(count($env_arr) > 1)
+		{
+			echo Cone::getString("install_env_plural", ["%" => join(", ", $env_arr)])."\n";
 		}
 		break;
 	case "up":
@@ -147,22 +157,18 @@ switch(@$argv[1])
 	case "upgrade":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
+			die(Cone::getString("update_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
-		if(@$argv[2] == "--post-install")
-		{
-			echo "Downloading package list...\n";
-		}
-		else
+		if(@$argv[2] != "--post-install")
 		{
 			$remote_version = trim(file_get_contents("https://code.getcone.org/version.txt"));
 			if(version_compare($remote_version, Cone::VERSION, ">"))
 			{
-				echo "Cone v".$remote_version." is available.\n";
+				echo Cone::getString("outdated", ["%" => "v".$remote_version])."\n".Cone::getString("outdated_update")."\n";
 				file_put_contents("_update_", "");
 				exit;
 			}
-			echo "Cone is up-to-date.\nUpdating package lists...\n";
+			echo Cone::getString("up_to_date")."\n".Cone::getString("update_repos")."\n";
 		}
 		$packages = [];
 		$_packages = Cone::getPackages();
@@ -170,11 +176,15 @@ switch(@$argv[1])
 		$update_sources = false;
 		foreach($sources as $url => $name)
 		{
-			echo "Fetching {$name}... ";
+			if($is_main_repo = ($url == "https://repository.getcone.org/main.json"))
+			{
+				$name = Cone::getString("main_repo");
+			}
+			echo Cone::getString("update_repo", ["%" => $name])." ";
 			$res = json_decode(@file_get_contents($url), true);
 			if($error = Cone::validateSourceData($res))
 			{
-				echo $error;
+				echo $error." ";
 				$local = 0;
 				foreach($_packages as $package)
 				{
@@ -184,19 +194,45 @@ switch(@$argv[1])
 						$local++;
 					}
 				}
-				echo " Restored {$local} package".($local == 1 ? "" : "s")." from local cache.\n";
+				if($local == 1)
+				{
+					echo Cone::getString("repo_restored_singular")."\n";
+				}
+				else
+				{
+					echo Cone::getString("repo_restored_plural", ["%" => $local])."\n";
+				}
 				break;
 			}
 			foreach($res["packages"] as $package)
 			{
 				array_push($packages, ["source" => $url] + $package);
 			}
-			echo "got ".count($res["packages"])." package".(count($res["packages"]) == 1 ? "" : "s").".\n";
-			if($name != $res["name"])
+			if(count($res["packages"]) == 1)
 			{
-				echo $name." is now known as ".$res["name"].".\n";
-				$sources[$url] = $res["name"];
-				$update_sources = true;
+				echo Cone::getString("repo_packages_singular")."\n";
+			}
+			else
+			{
+				echo Cone::getString("repo_packages_plural", ["%" => count($res["packages"])])."\n";
+			}
+			if(!$is_main_repo)
+			{
+				if($name != $res["name"])
+				{
+					echo Cone::getString("repo_rename", [
+							"%OLD%" => $name,
+							"%NEW%" => $res["name"]
+						])."\n";
+					$sources[$url] = $res["name"];
+					$update_sources = true;
+				}
+				if($url == "https://packages.getcone.org/main.json")
+				{
+					unset($sources["https://packages.getcone.org/main.json"]);
+					$sources["https://repository.getcone.org/main.json"] = $res["name"];
+					$update_sources = true;
+				}
 			}
 		}
 		Cone::setPackages($packages);
@@ -204,7 +240,7 @@ switch(@$argv[1])
 		{
 			Cone::setSources($sources);
 		}
-		echo "Updating installed packages...\n";
+		echo Cone::getString("update_packages")."\n";
 		$installed_packages = Cone::getInstalledPackagesList();
 		foreach($installed_packages as $name => $data)
 		{
@@ -226,7 +262,7 @@ switch(@$argv[1])
 		Cone::setInstalledPackages($installed_packages);
 		if(@$argv[2] != "--post-install" && $native = UnixPackageManager::getNativePackageManager())
 		{
-			echo "Would you like to perform an update with {$native} as well?";
+			echo Cone::getString("update_native", ["%" => $native]);
 			if(Cone::yesOrNo())
 			{
 				UnixPackageManager::updateAllPackages();
@@ -236,12 +272,12 @@ switch(@$argv[1])
 	case "force-self-update":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to update.\n");
+			die(Cone::getString("update_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
-		echo "Do you know what you're doing?";
+		echo Cone::getString("advanced_user_prompt");
 		if(!Cone::noOrYes())
 		{
-			die("Aborting.\n");
+			die(Cone::getString("abort")."\n");
 		}
 		file_put_contents("_update_", "");
 		break;
@@ -253,7 +289,7 @@ switch(@$argv[1])
 	case "uninstall":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to uninstall packages.\n");
+			die(Cone::getString("uninstall_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
 		$installed_packages = Cone::getInstalledPackagesList();
 		$packages = [];
@@ -262,12 +298,12 @@ switch(@$argv[1])
 			$name = strtolower($argv[$i]);
 			if($name == "cone")
 			{
-				die("If you're looking to uninstall Cone, use 'cone self-uninstall'.\n");
+				die(Cone::getString("uninstall_cone", ["%COMMAND%" => 'cone self-uninstall'])."\n");
 			}
 			$p = Cone::getPackage($name, true);
 			if($p === null || !array_key_exists($p->getName(), $installed_packages))
 			{
-				echo $name." is not installed.\n";
+				echo Cone::getString("not_installed", ["%" => $name])."\n";
 				continue;
 			}
 			array_push($packages, $p->getName());
@@ -283,14 +319,17 @@ switch(@$argv[1])
 				$p = Cone::getPackage($name);
 				if($p != null && in_array($package, $p->getDependenciesList()))
 				{
-					die($p->getDisplayName()." depends on ".$package.".\n");
+					die(Cone::getString("uninstall_dependency", [
+						"%OTHER_PACKAGE%" => $p->getDisplayName(),
+						"%UNINSTALL_TARGET%" => $package
+					])."\n");
 				}
 			}
 		}
 		$before = count($installed_packages);
 		foreach($packages as $package)
 		{
-			echo "Removing ".$package."...\n";
+			echo Cone::getString("uninstall_package", ["%" => $package])."\n";
 			try
 			{
 				(new Package(["name" => $package]))->uninstall($installed_packages);
@@ -302,9 +341,20 @@ switch(@$argv[1])
 		}
 		Cone::removeUnneededDependencies($installed_packages);
 		$count = ($before - count($installed_packages));
-		echo "Removed ".$count." package".($count == 1 ? "" : "s").".\n";
+		if($count == 1)
+		{
+			echo Cone::getString("uninstalled_singular")."\n";
+		}
+		else
+		{
+			echo Cone::getString("uninstalled_plural", ["%" => $count])."\n";
+		}
 		Cone::setInstalledPackages($installed_packages);
 		break;
+	case "repos":
+	case "list-repos":
+	case "repositories":
+	case "list-repositories":
 	case "sources":
 	case "list-sources":
 		$sources = Cone::getSources();
@@ -313,33 +363,35 @@ switch(@$argv[1])
 			echo "$name\t$url\n";
 		}
 		break;
+	case "add-repo":
+	case "add-repository":
 	case "add-source":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to manage package sources.\n");
+			die(Cone::getString("repo_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
 		if(empty($argv[2]))
 		{
-			die("Syntax: cone add-source <URL>\n");
+			die(Cone::getString("syntax").": cone add-source <url>\n");
 		}
 		$sources = Cone::getSources();
 		foreach($sources as $url => $name)
 		{
 			if(strtolower($url) == strtolower($argv[2]))
 			{
-				die("That's already one of Cone's package sources.\n");
+				die(Cone::getString("repo_duplicate", ["%" => $name])."\n");
 			}
 		}
 		echo "Fetching... ";
 		$res = @file_get_contents($argv[2]);
 		if(!$res)
 		{
-			die("There doesn't seem to be anything at that URL.\n");
+			die(Cone::getString("repo_http_error")."\n");
 		}
 		$res = json_decode($res, true);
 		if($res === null)
 		{
-			die("That file doesn't contain valid JSON.\n");
+			die(Cone::getString("repo_invalid_json")."\n");
 		}
 		if($error = Cone::validateSourceData($res))
 		{
@@ -347,56 +399,67 @@ switch(@$argv[1])
 		}
 		$sources[$argv[2]] = $res["name"];
 		Cone::setSources($sources);
-		echo "Successfully added ".$res["name"].".\nUse 'cone update' once you're finished managing package sources.\n";
+		echo Cone::getString("repo_add_success", ["%" => $res["name"]])."\n".Cone::getString("repo_update", ["%COMMAND%" => "'cone update'"])."\n";
 		break;
+	case "rm-repo":
+	case "rm-repository":
+	case "rm-source":
+	case "del-repo":
+	case "del-repository":
 	case "del-source":
+	case "delete-repo":
+	case "delete-repository":
+	case "delete-source":
+	case "remove-repo":
+	case "remove-repository":
 	case "remove-source":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to manage package sources.\n");
+			die(Cone::getString("repo_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
 		if(empty($argv[2]))
 		{
-			die("Syntax: cone remove-source <URL>\n");
+			die(Cone::getString("syntax").": cone remove-source <url>\n");
 		}
 		$sources = Cone::getSources();
 		if(!array_key_exists($argv[2], $sources))
 		{
-			die("Package source unknown. Keep in mind that you have to use the URL. Use 'cone sources' for a list.\n");
+			die(Cone::getString("repo_unknown", ["%COMMAND%" => "'cone repositories'"]));
 		}
-		if($argv[2] == "https://packages.getcone.org/main.json")
+		if($argv[2] == "https://repository.getcone.org/main.json")
 		{
-			echo "Do you know what you're doing?";
+			echo Cone::getString("advanced_user_prompt");
 			if(!Cone::noOrYes())
 			{
-				die("Aborting.\n");
+				die(Cone::getString("abort")."\n");
 			}
 			Cone::timeToContemplate();
 		}
 		$name = $sources[$argv[2]];
 		unset($sources[$argv[2]]);
 		Cone::setSources($sources);
+		echo Cone::getString("repo_remove_success", ["%" => $res["name"]])."\n".Cone::getString("repo_update", ["%COMMAND%" => "'cone update'"])."\n";
 		echo "Successfully removed {$name}.\nUse 'cone update' once you're finished managing package sources.\n";
 		break;
 	case "self-uninstall":
 		if(!Cone::isAdmin())
 		{
-			die("Cone needs to run as ".Cone::rootOrAdmin()." to self-uninstall.\n");
+			die(Cone::getString("self_uninstall_elevate", ["%ADMIN%" => Cone::rootOrAdmin()])."\n");
 		}
 		$installed_packages = Cone::getInstalledPackagesList();
 		if(count($installed_packages) > 0)
 		{
-			echo "You currently have ";
+			echo Cone::getString("self_uninstall_packages")." ";
 			Cone::printInstalledPackages($installed_packages);
-			echo "Are you sure you want to remove them and Cone?";
+			echo Cone::getString("self_uninstall_packages_prompt");
 			if(!Cone::noOrYes())
 			{
-				die("Aborting.\n");
+				die(Cone::getString("abort")."\n");
 			}
 			Cone::timeToContemplate();
 			foreach($installed_packages as $name => $data)
 			{
-				echo "Removing ".$name."...\n";
+				echo Cone::getString("uninstall_package", ["%" => $name]);
 				try
 				{
 					(new Package(["name" => $name]))->uninstall();
@@ -409,13 +472,13 @@ switch(@$argv[1])
 		}
 		else
 		{
-			echo "Are you sure you want to remove Cone from your system?";
+			echo Cone::getString("self_uninstall_prompt");
 			if(!Cone::noOrYes())
 			{
-				die("Aborting.\n");
+				die(Cone::getString("abort")."\n");
 			}
 		}
-		echo "Would you also like to remove PHP-CLI?";
+		echo Cone::getString("self_uninstall_php");
 		$remove_php = Cone::yesOrNo();
 		if(Cone::isWindows())
 		{
@@ -435,28 +498,25 @@ switch(@$argv[1])
 		file_put_contents("_uninstall_", "");
 		break;
 	default:
-		echo /** @lang text */
-		<<<EOS
-Syntax: cone <command [args]>
-
-These are available Cone commands used in various situations:
-
-get information about Cone and installed packages:
-   info               Displays version information
-   list               Lists installed packages
-   installable        Lists installable packages
-
-manage Cone and installed packages:
-   update             Updates Cone and installed packages
-   get ... [--force]  Installs the given package(s), optionally forcefully/non-interactively
-   remove ...         Uninstalls the given package(s)
-   self-uninstall     Removes Cone and installed packages from your system
-   force-self-update  Forces an update which can be useful if you've edited Cone's files
-
-manage package sources:
-   sources            Lists all sources
-   add-source ...     Adds a source by its URL
-   remove-source ...  Remove a source by its URL
-
-EOS;
+		echo Cone::getString("syntax").": cone <".Cone::getString("command")." [".Cone::getString("arguments")." ...]>\n";
+		echo "\n";
+		echo Cone::getString("help")."\n";
+		echo "\n";
+		echo Cone::getString("help_category_info")."\n";
+		echo "  info                           ".Cone::getString("help_info")."\n";
+		echo "  list                           ".Cone::getString("help_list")."\n";
+		echo "  installable                    ".Cone::getString("help_installable")."\n";
+		echo "\n";
+		echo Cone::getString("help_category_packages")."\n";
+		echo "  update                         ".Cone::getString("help_update")."\n";
+		echo "  get <".Cone::getString("packages")." ...> [--force]   ".Cone::getString("help_install")."\n";
+		echo "  remove <".Cone::getString("packages")." ...>          ".Cone::getString("help_remove")."\n";
+		echo "  self-uninstall                 ".Cone::getString("help_self_uninstall")."\n";
+		echo "  force-self-update              ".Cone::getString("help_force_self_update")."\n";
+		echo "\n";
+		echo Cone::getString("help_category_repositories")."\n";
+		echo "   repositories                  ".Cone::getString("help_repositories")."\n";
+		echo "   add-repository <url>          ".Cone::getString("help_add_repository")."\n";
+		echo "   remove-repository <url>       ".Cone::getString("help_remove_repository")."\n";
+		echo "\n";
 }

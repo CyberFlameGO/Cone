@@ -71,7 +71,7 @@ class Package
 		}
 		else if($this->hasVersion() && (strpos($this->data["version"], "dev") !== false || version_compare($this->data["version"], $this->getInstallData()["version"], ">")))
 		{
-			echo "Updating ".$this->getDisplayName()."...\n";
+			echo Cone::getString("update_package", ["%" => $this->getDisplayName()])."\n";
 			$this->uninstall($installed_packages);
 			$this->install($installed_packages, true);
 		}
@@ -407,7 +407,10 @@ class Package
 						{
 							if(!$as_dependency)
 							{
-								echo "Not installing ".$this->getDisplayName()." because '".$prerequisite["value"]."' is a registered command.\n";
+								echo Cone::getString("prerequisite_command", [
+									"%PACKAGE_NAME%" => $this->getDisplayName(),
+									"%COMMAND%" => $prerequisite["value"]
+								])."\n";
 							}
 							return;
 						}
@@ -424,23 +427,22 @@ class Package
 				$dependency->install($installed_packages, false, $env_arr, $this->getDisplayName());
 			}
 		}
-		echo "Installing ";
 		$installed_packages[$this->getName()] = [
 			"display_name" => $this->getDisplayName($installed_packages),
 			"manual" => !$as_dependency
 		];
-		echo $installed_packages[$this->getName()]["display_name"];
+		$full_display_name = $installed_packages[$this->getName()]["display_name"];
 		if($this->hasVersion())
 		{
-			echo " ";
+			$full_display_name .= " ";
 			if(strpos($this->data["version"], "dev") === false)
 			{
-				echo "v";
+				$full_display_name .= "v";
 			}
-			echo $this->data["version"];
+			$full_display_name .= $this->data["version"];
 			$installed_packages[$this->getName()]["version"] = $this->data["version"];
 		}
-		echo "...\n";
+		echo Cone::getString("install_package", ["%" => $full_display_name])."\n";
 		if(!is_dir(__DIR__."/../packages/"))
 		{
 			mkdir(__DIR__."/../packages/");

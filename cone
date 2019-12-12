@@ -8,6 +8,5 @@ if [[ -f /usr/share/cone/_uninstall_ ]]; then
 	bash /tmp/cone_uninstall.sh
 	echo "...aaand it's gone."
 elif [[ -f /usr/share/cone/_update_ ]]; then
-	echo "Downloading updater..."
 	wget -qO- https://code.getcone.org/install.sh | bash
 fi

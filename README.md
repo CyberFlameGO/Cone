@@ -2,6 +2,8 @@
 
 One intuitive package manager for all operations systems.
 
+- [Translate Cone on Crowdin](https://crowdin.com/project/cone)
+
 ## Download
 
 - [Windows](https://code.getcone.org/install.bat)
