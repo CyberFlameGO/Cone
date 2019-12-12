@@ -80,7 +80,7 @@ Cone\Cone::$strings = [
 	"help_self_uninstall" => "Uninstalls Cone and installed packages",
 	"help_force_self_update" => "Forces an update which can be useful if you've edited Cone's files",
 	"help_category_repositories" => "manage repositories:",
-	"help_repositories" => "Lists all repository",
+	"help_repositories" => "Lists all repositories",
 	"help_add_repository" => "Adds a repository by its URL",
 	"help_remove_repository" => "Removes a repository by its URL"
 ];
