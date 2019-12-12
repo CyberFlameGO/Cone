@@ -120,7 +120,7 @@ SETX /m DUMMY ""
 REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /F /V DUMMY
 
 :: Finish Install
-"%php%" src/cli.php update --post-install
+"%php%" cli.php update --post-install
 ECHO Cone is now installed.
 ECHO Get started by opening Command Prompt (as Administrator) and typing "cone help".
 PAUSE > NUL
