@@ -459,7 +459,7 @@ switch(@$argv[1])
 			Cone::timeToContemplate();
 			foreach($installed_packages as $name => $data)
 			{
-				echo Cone::getString("uninstall_package", ["%" => $name]);
+				echo Cone::getString("uninstall_package", ["%" => $name])."\n";
 				try
 				{
 					(new Package(["name" => $name]))->uninstall();
