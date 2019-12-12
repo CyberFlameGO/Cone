@@ -87,6 +87,8 @@ ECHO s.NameSpace("%tmp%").CopyHere(s.NameSpace("%tmp%\Cone.zip").items) >> tmp.v
 cscript //nologo tmp.vbs
 DEL tmp.vbs
 DEL %tmp%\Cone.zip
+IF EXIST lang\ RMDIR /S /Q lang
+MOVE %tmp%\Cone-%CONE_VERSION%\lang lang
 IF EXIST src\ RMDIR /S /Q src
 MOVE %tmp%\Cone-%CONE_VERSION%\src src
 IF EXIST cli.php DEL cli.php

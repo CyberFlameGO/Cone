@@ -41,6 +41,10 @@ else
 fi
 tar -xf Cone.tar.gz
 rm -f Cone.tar.gz
+if [[ -d lang ]]; then
+	rm -rf lang
+fi
+mv Cone-${CONE_VERSION}/lang/ lang
 if [[ -d src ]]; then
 	rm -rf src
 fi
