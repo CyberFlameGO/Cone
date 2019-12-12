@@ -225,7 +225,7 @@ switch(@$argv[1])
 		echo "Finishing up...\n";
 		Cone::removeUnneededDependencies($installed_packages);
 		Cone::setInstalledPackages($installed_packages);
-		if($native = UnixPackageManager::getNativePackageManager())
+		if(@$argv[2] != "--post-install" && $native = UnixPackageManager::getNativePackageManager())
 		{
 			echo "Would you like to perform an update with {$native} as well?";
 			if(Cone::yesOrNo())
