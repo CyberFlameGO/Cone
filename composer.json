@@ -5,11 +5,9 @@
 	"type": "library",
 	"license": "MIT",
 	"autoload": {
-		"files": [
-			"src/Cone.class.php",
-			"src/Package.class.php",
-			"src/UnixPackageManager.class.php"
-		]
+		"psr-4": {
+			"Cone\\": "src/"
+		}
 	},
 	"require": {
 		"ext-json": "*"

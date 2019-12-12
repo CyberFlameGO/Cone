@@ -1,6 +1,6 @@
 #!/bin/bash
 # DO NOT add a "sudo" before "php" -- this entire script has to run as root.
-php /usr/share/cone/src/cli.php "$@"
+php /usr/share/cone/cli.php "$@"
 if [[ -f /usr/share/cone/_uninstall_ ]]; then
 	echo "rm -rf /usr/share/cone" > /tmp/cone_uninstall.sh
 	echo "rm -f /usr/bin/cone" >> /tmp/cone_uninstall.sh

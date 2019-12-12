@@ -45,6 +45,10 @@ if [[ -d src ]]; then
 	rm -rf src
 fi
 mv Cone-${CONE_VERSION}/src/ src
+if [[ -f cli.php ]]; then
+	rm cli.php
+fi
+mv Cone-${CONE_VERSION}/cli.php cli.php
 if [[ -f /usr/bin/cone ]]; then
 	rm /usr/bin/cone
 fi

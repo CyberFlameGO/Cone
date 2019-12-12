@@ -89,6 +89,8 @@ DEL tmp.vbs
 DEL %tmp%\Cone.zip
 IF EXIST src\ RMDIR /S /Q src
 MOVE %tmp%\Cone-%CONE_VERSION%\src src
+IF EXIST cli.php DEL cli.php
+MOVE %tmp%\Cone-%CONE_VERSION%\cli.php cli.php
 IF NOT EXIST path\ MKDIR path
 IF EXIST path\cone.bat DEL path\cone.bat
 MOVE %tmp%\Cone-%CONE_VERSION%\cone.bat path\cone.bat

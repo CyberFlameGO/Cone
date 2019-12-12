@@ -1,9 +1,8 @@
 <?php
-/** @noinspection HtmlDeprecatedTag */
-chdir(realpath(__DIR__."/.."));
-require "src/Cone.class.php";
-require "src/Package.class.php";
-require "src/UnixPackageManager.class.php";
+chdir(realpath(__DIR__));
+require "src/Cone.php";
+require "src/Package.php";
+require "src/UnixPackageManager.php";
 use Cone\Cone;
 use Cone\Package;
 use Cone\UnixPackageManager;
@@ -436,7 +435,8 @@ switch(@$argv[1])
 		file_put_contents("_uninstall_", "");
 		break;
 	default:
-		echo <<<EOS
+		echo /** @lang text */
+		<<<EOS
 Syntax: cone <command [args]>
 
 These are available Cone commands used in various situations:

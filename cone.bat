@@ -1,6 +1,6 @@
 @ECHO OFF
 IF EXIST "%ProgramFiles%\Hell.sh\Cone\_update_" DEL _update_
-php "%ProgramFiles%\Hell.sh\Cone\src\cli.php" %*
+php "%ProgramFiles%\Hell.sh\Cone\cli.php" %*
 IF EXIST "%ProgramFiles%\Hell.sh\Cone\_uninstall_" (
 	ECHO RMDIR /S /Q "%ProgramFiles%\Hell.sh\Cone" > %tmp%\Cone_uninstall.bat
     IF EXIST "%ProgramFiles%\Hell.sh\Cone\_uninstall_php_" (
