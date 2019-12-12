@@ -10,8 +10,10 @@ fi
 if [[ "$(which php)" = "" ]]; then
 	echo "Installing PHP..."
 	if [[ "$(which aptitude)" != "" ]]; then
+		aptitude -y update
 		aptitude -y install php-cli
 	elif [[ "$(which apt-get)" != "" ]]; then
+		apt-get -y update
 		apt-get -y install php-cli
 	elif [[ "$(which pacman)" != "" ]]; then
 		pacman --noconfirm -S php-cli
