@@ -13,7 +13,10 @@ if(version_compare($o, $n, ">"))
 	fclose($stdin);
 }
 file_put_contents("version.txt", $n);
-foreach(["install.bat", "install.sh"] as $installer)
+foreach([
+	"install.bat",
+	"install.sh"
+] as $installer)
 {
 	file_put_contents($installer, str_replace("CONE_VERSION={$o}", "CONE_VERSION={$n}", file_get_contents($installer)));
 }

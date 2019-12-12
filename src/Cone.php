@@ -19,6 +19,31 @@ final class Cone
 	private static $packages_cache;
 	private static $installed_packages_cache;
 
+	static function isMacOS()
+	{
+		return stristr(PHP_OS, "DAR");
+	}
+
+	static function isLinux()
+	{
+		return stristr(PHP_OS, "LINUX");
+	}
+
+	static function isAdmin()
+	{
+		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
+	}
+
+	static function isWindows()
+	{
+		return defined("PHP_WINDOWS_VERSION_MAJOR");
+	}
+
+	static function rootOrAdmin()
+	{
+		return self::isWindows() ? self::getString("admin") : "root";
+	}
+
 	static function getString($key, $replacements = null)
 	{
 		if(self::$strings === null)
@@ -34,7 +59,6 @@ final class Cone
 	}
 
 	/** @noinspection PhpIncludeInspection */
-
 	static function loadStrings($locale = null)
 	{
 		if(!$locale)
@@ -74,31 +98,6 @@ final class Cone
 			return trim(shell_exec("powershell /c \"(Get-UICulture).Name\""));
 		}
 		return "";
-	}
-
-	static function isWindows()
-	{
-		return defined("PHP_WINDOWS_VERSION_MAJOR");
-	}
-
-	static function isMacOS()
-	{
-		return stristr(PHP_OS, "DAR");
-	}
-
-	static function isLinux()
-	{
-		return stristr(PHP_OS, "LINUX");
-	}
-
-	static function isAdmin()
-	{
-		return self::isWindows() ? trim(shell_exec("NET SESSION 2>NUL")) != "" : trim(shell_exec("whoami")) == "root";
-	}
-
-	static function rootOrAdmin()
-	{
-		return self::isWindows() ? self::getString("admin") : "root";
 	}
 
 	static function getPathFolder()

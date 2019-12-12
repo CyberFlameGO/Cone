@@ -320,9 +320,9 @@ switch(@$argv[1])
 				if($p != null && in_array($package, $p->getDependenciesList()))
 				{
 					die(Cone::getString("uninstall_dependency", [
-						"%OTHER_PACKAGE%" => $p->getDisplayName(),
-						"%UNINSTALL_TARGET%" => $package
-					])."\n");
+							"%OTHER_PACKAGE%" => $p->getDisplayName(),
+							"%UNINSTALL_TARGET%" => $package
+						])."\n");
 				}
 			}
 		}

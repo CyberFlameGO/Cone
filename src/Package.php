@@ -408,9 +408,9 @@ class Package
 							if(!$as_dependency)
 							{
 								echo Cone::getString("prerequisite_command", [
-									"%PACKAGE_NAME%" => $this->getDisplayName(),
-									"%COMMAND%" => $prerequisite["value"]
-								])."\n";
+										"%PACKAGE_NAME%" => $this->getDisplayName(),
+										"%COMMAND%" => $prerequisite["value"]
+									])."\n";
 							}
 							return;
 						}
