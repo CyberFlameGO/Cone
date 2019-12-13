@@ -498,6 +498,7 @@ switch(@$argv[1])
 		file_put_contents("_uninstall_", "");
 		break;
 	default:
+		$psl = strlen(Cone::getString("packages"));
 		echo Cone::getString("syntax").": cone <".Cone::getString("command")." [".Cone::getString("arguments")." ...]>\n";
 		echo "\n";
 		echo Cone::getString("help")."\n";
@@ -509,8 +510,8 @@ switch(@$argv[1])
 		echo "\n";
 		echo Cone::getString("help_category_packages")."\n";
 		echo "  update                         ".Cone::getString("help_update")."\n";
-		echo "  get <".Cone::getString("packages")." ...> [--force]     ".Cone::getString("help_install")."\n";
-		echo "  remove <".Cone::getString("packages")." ...>            ".Cone::getString("help_remove")."\n";
+		echo "  get <".Cone::getString("packages")." ...> [--force]".str_repeat(" ", 11 - $psl).Cone::getString("help_install")."\n";
+		echo "  remove <".Cone::getString("packages")." ...>".str_repeat(" ", 18 - $psl).Cone::getString("help_remove")."\n";
 		echo "  self-uninstall                 ".Cone::getString("help_self_uninstall")."\n";
 		echo "  force-self-update              ".Cone::getString("help_force_self_update")."\n";
 		echo "\n";
