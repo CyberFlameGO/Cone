@@ -107,7 +107,7 @@ switch(@$argv[1])
 				];
 				if($force)
 				{
-					echo Cone::getString("risky_alias_force", $replacements).".\n";
+					echo Cone::getString("risky_alias_force", $replacements)."\n";
 				}
 				else
 				{
