@@ -26,7 +26,7 @@ IF %errorLevel% == 0 (
 
 :: Install PHP
 CLS
-SET PHP_VERSION=7.4.0
+SET PHP_VERSION=7.4.2
 ECHO Downloading PHP %PHP_VERSION%...
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; Invoke-WebRequest https://storage.getcone.org/php-%PHP_VERSION%-nts-Win32-vc15-%ARCH%.zip -UseBasicParsing -OutFile %tmp%\php.zip"
 IF NOT EXIST "%tmp%\php.zip" (
