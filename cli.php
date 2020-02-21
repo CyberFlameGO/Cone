@@ -30,6 +30,17 @@ switch(@$argv[1])
 		echo Cone::getString("installable")."\n";
 		foreach(Cone::getPackages() as $package)
 		{
+			try
+			{
+				if(!$package->arePrerequisitesMet())
+				{
+					continue;
+				}
+			}
+			catch(Exception $e)
+			{
+				continue;
+			}
 			echo $package->getName().": ".$package->getDisplayName();
 			if($package->hasVersion())
 			{

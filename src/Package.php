@@ -409,29 +409,9 @@ class Package
 		{
 			return;
 		}
-		if(!$force && array_key_exists("prerequisites", $this->data))
+		if(!$force && !$this->arePrerequisitesMet(!$as_dependency))
 		{
-			foreach($this->data["prerequisites"] as $prerequisite)
-			{
-				switch($prerequisite["type"])
-				{
-					case "command_not_found":
-						if(Cone::which($prerequisite["value"]) != "")
-						{
-							if(!$as_dependency)
-							{
-								echo Cone::getString("prerequisite_command", [
-										"%PACKAGE_NAME%" => $this->getDisplayName(),
-										"%COMMAND%" => $prerequisite["value"]
-									])."\n";
-							}
-							return;
-						}
-						break;
-					default:
-						throw new Exception("Unknown prerequisite type: ".$prerequisite["type"]);
-				}
-			}
+			return;
 		}
 		if(array_key_exists("dependencies", $this->data))
 		{
@@ -568,6 +548,45 @@ class Package
 		{
 			Cone::setInstalledPackages($installed_packages);
 		}
+	}
+
+	/**
+	 * @param bool $print
+	 * @return bool
+	 * @throws Exception
+	 * @since 1.1
+	 */
+	function arePrerequisitesMet($print = false)
+	{
+		if(array_key_exists("prerequisites", $this->data))
+		{
+			foreach($this->data["prerequisites"] as $prerequisite)
+			{
+				switch($prerequisite["type"])
+				{
+					case "os":
+						$ok = false;
+						self::platformSwitch($prerequisite, function() use (&$ok)
+						{
+							$ok = true;
+						});
+						if(!$ok)
+						{
+							if($print)
+							{
+								echo Cone::getString("prerequisite_os", [
+										"%PACKAGE_NAME%" => $this->getDisplayName()
+									])."\n";
+							}
+							return false;
+						}
+						break;
+					default:
+						throw new Exception("Unknown prerequisite type: ".$prerequisite["type"]);
+				}
+			}
+		}
+		return true;
 	}
 
 	/**
