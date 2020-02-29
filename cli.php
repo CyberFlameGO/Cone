@@ -164,6 +164,7 @@ switch(@$argv[1])
 		}
 		break;
 	case "up":
+	case "updat":
 	case "update":
 	case "upgrade":
 		if(!Cone::isAdmin())
